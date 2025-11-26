@@ -1,3 +1,4 @@
+import java.sql.SQLOutput;
 import java.util.Scanner;
 
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
@@ -33,6 +34,7 @@ public class Main {
                     viewStudents();
                     break;
                 case 3:
+                    recordGrade(sc);
                     break;
                 case 4:
                     break;
@@ -149,7 +151,7 @@ public class Main {
         System.out.println();
         System.out.println("STUDENT LISTING");
         System.out.println("________________________________________________________________________________________________________________________");
-        System.out.println("| STUDENT ID  | NAME           | TYPE        | AVG GRADE | STATUS | ENROLLED SUBJECTS | PASSING GRADE | Honors Eligible |");
+        System.out.println("| STUDENT ID  | NAME                  | TYPE            | AVG GRADE | STATUS       | ENROLLED SUBJECTS    | PASSING GRADE | Honors Eligible     |");
         System.out.println("|_______________________________________________________________________________________________________________________|");
         for (int i = 0; i < studentCount; i++) {
             Student student = students[i];
@@ -166,15 +168,50 @@ public class Main {
         System.out.println("|=========================================================================================================================|");
     }
 
+    public static void recordGrade(Scanner sc) {
+        System.out.println();
+        System.out.println("RECORD GRADE");
+        System.out.println("_________________________");
+
+//        GET STUDENT ID
+        System.out.print("Enter Student ID: ");
+        String studentID = sc.nextLine();
+
+//        FIND STUDENT BY ID
+        Student foundStudent = null;
+        for (int i = 0; i < studentCount; i++) {
+            if (students[i].getStudentID().equals(studentID)) {
+                foundStudent = students[i];
+                break;
+            }
+        }
+
+        if (foundStudent == null) {
+            System.out.println("Student not found!");
+            return;
+        }
+
+        System.out.println();
+        System.out.println("Student Details: ");
+        System.out.printf("Name: %s", foundStudent.getName());
+        System.out.println();
+        System.out.printf("Type: %s", (foundStudent instanceof HonorsStudent) ? "Honors Student" : "Regular Student");
+        System.out.println();
+        System.out.println("Current Average: ");
+
+
+
+    };
+
     private static void initializeSampleStudents() {
         // Add 3 regular students
-        students[studentCount++] = new RegularStudent("John Doe", 20, "john@example.com", "1234567890");
-        students[studentCount++] = new RegularStudent("Jane Smith", 21, "jane@example.com", "2345678901");
-        students[studentCount++] = new RegularStudent("Mike Johnson", 22, "mike@example.com", "3456789012");
+        students[studentCount++] = new RegularStudent("Kofi Mensah", 20, "john@example.com", "1234567890");
+        students[studentCount++] = new RegularStudent("Yaa Agyei", 21, "jane@example.com", "2345678901");
+        students[studentCount++] = new RegularStudent("John Cena", 22, "mike@example.com", "3456789012");
 
         // Add 2 honors students
-        students[studentCount++] = new HonorsStudent("Sarah Williams", 20, "sarah@example.com", "4567890123");
-        students[studentCount++] = new HonorsStudent("David Brown", 21, "david@example.com", "5678901234");
+        students[studentCount++] = new HonorsStudent("Afia Oduro", 20, "sarah@example.com", "4567890123");
+        students[studentCount++] = new HonorsStudent("David Goliath", 21, "david@example.com", "5678901234");
 
         // Add sample grades
         students[0].addGrade(75); // John
