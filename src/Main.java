@@ -82,6 +82,17 @@ import java.util.Scanner;
         }
         return null;
     }
+//    Check for duplicates before adding a new student
+//
+    private static boolean isDuplicateStudent(String name, String email) {
+        for (int i = 0; i < studentCount; i++) {
+            Student s = students[i];
+            if (s.getName().equalsIgnoreCase(name) && s.getEmail().equalsIgnoreCase(email)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     public static void addStudent(Scanner sc){
         System.out.println();
@@ -107,6 +118,12 @@ import java.util.Scanner;
         System.out.print("Enter student phone: ");
         String phone = sc.nextLine();
         System.out.println();
+
+        // Check for duplicates before proceeding
+        if (isDuplicateStudent(name, email)) {
+            System.out.println("A student with this name and email already exists");
+            return;
+        }
 
         System.out.println("Student type: ");
         System.out.println("1. Regular Student (Passing grade: 50%)");
