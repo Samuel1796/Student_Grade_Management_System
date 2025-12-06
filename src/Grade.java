@@ -1,5 +1,9 @@
 // java
 // src/Grade.java
+
+// Represents a student's grade record with all relevant data
+//  Includes grade ID, student ID, subject details, numeric value, and date
+
 import java.util.Date;
 
 public class Grade {
@@ -19,6 +23,8 @@ public class Grade {
         this.date = new Date(date.getTime());
     }
 
+
+//    Getters to get access to the attributes
     public String getGradeID() { return gradeID; }
     public String getStudentID() { return studentID; }
     public String getSubjectName() { return subjectName; }

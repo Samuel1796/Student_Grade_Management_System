@@ -1,4 +1,6 @@
 // src/ElectiveSubject.java
+// Represents an elective subject with specific attributes and methods
+//  Inherits from Subject class
 public class ElectiveSubject extends Subject {
     public ElectiveSubject(String name, String code) {
         super(name, code);

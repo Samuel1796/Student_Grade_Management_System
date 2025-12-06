@@ -1,18 +1,30 @@
 // java
+// Main application class handling student grade management
+//  Contains menu system and core business logic
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
+import java.util.regex.Pattern;
 
-
-
-    private static Student[] students  = new Student[50];
+public class Main {
+    // Array to store student records (max 50 students)
+    private static final Student[] students  = new Student[50];
     private static int studentCount = 0;
 
     //storage for grade records
-    private static Grade[] grades = new Grade[500];
+    private static final Grade[] grades = new Grade[500];
     private static int gradeCount = 0;
+
+//         Validates email format using regex pattern
+    private static final Pattern EMAIL_PATTERN = Pattern.compile(
+            "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$"
+    );
+
+    private static boolean isValidEmail(String email) {
+        return EMAIL_PATTERN.matcher(email).matches();
+    }
 
 
     public static void main(String[] args) {
@@ -60,6 +72,7 @@ import java.util.Scanner;
 
     }
 
+//    Handles the main menu
     public static void displayMenu() {
         System.out.println("1. Add Student");
         System.out.println("2. View Students");
@@ -94,6 +107,8 @@ import java.util.Scanner;
         return false;
     }
 
+
+//          Adds a new student to the system
     public static void addStudent(Scanner sc){
         System.out.println();
         System.out.println("ADD STUDENT");
@@ -112,8 +127,15 @@ import java.util.Scanner;
         int age = sc.nextInt();
         sc.nextLine();
 
-        System.out.print("Enter student mail: ");
-        String email = sc.nextLine();
+        String email;
+        while (true) {
+            System.out.print("Enter student mail: ");
+            email = sc.nextLine();
+            if (isValidEmail(email)) {
+                break;
+            }
+            System.out.println("Invalid email format. Please try again.");
+        }
 
         System.out.print("Enter student phone: ");
         String phone = sc.nextLine();
@@ -166,6 +188,7 @@ import java.util.Scanner;
     }
 
 
+//          Displays all students in a formatted table
     public static void viewStudents(){
         if (studentCount == 0) {
             System.out.println("No students available.");
@@ -195,7 +218,10 @@ import java.util.Scanner;
         System.out.println("|=============================================================================================================================================|");
     }
 
+
+//         Records a new grade for a student in a specified subject
     public static void recordGrade(Scanner sc) {
+
         System.out.println();
         System.out.println("RECORD GRADE");
         System.out.println("_________________________");
@@ -204,6 +230,7 @@ import java.util.Scanner;
         System.out.print("Enter Student ID: ");
         String studentID = sc.nextLine();
         Student foundStudent = findStudentById(studentID);
+        double avg = foundStudent != null ? foundStudent.calculateAverage() : 0;
 
 
 
@@ -217,7 +244,7 @@ import java.util.Scanner;
         System.out.printf("Name: %s%n", foundStudent.getName());
         System.out.printf("Type: %s%n", (foundStudent instanceof HonorsStudent) ? "Honors Student" : "Regular Student");
         System.out.println();
-        System.out.println("Current Average: ");
+        System.out.printf("Current Average: %f",avg);
         System.out.println();
 
 
@@ -411,8 +438,6 @@ import java.util.Scanner;
                             "higher standards (passing grade: 60%, eligible for honors recognition)" :
                             "standard grading (passing grade: 50%)"));
         }
-        return;
-
     }
     private static void initializeSampleStudents() {
         // Core subjects
@@ -422,32 +447,45 @@ import java.util.Scanner;
         // Elective subjects
         Subject art = new ElectiveSubject("Art", "ART101");
         Subject pe = new ElectiveSubject("Physical Education", "PE101");
-
+    
+        Date now = new Date();
+        
         // Add 3 regular students
         Student s1 = new RegularStudent("Kofi Mensah", 20, "john@example.com", "1234567890");
         s1.enrollSubject(math); s1.enrollSubject(english); s1.enrollSubject(science);
-        s1.addGrade(100); s1.addGrade(100); s1.addGrade(100);
-
+        s1.addGrade(100); grades[gradeCount++] = new Grade("GRD001", s1.getStudentID(), "Mathematics", "Core Subject", 100, now);
+        s1.addGrade(100); grades[gradeCount++] = new Grade("GRD002", s1.getStudentID(), "English", "Core Subject", 100, now);
+        s1.addGrade(100); grades[gradeCount++] = new Grade("GRD003", s1.getStudentID(), "Science", "Core Subject", 100, now);
+        
         Student s2 = new RegularStudent("Yaa Agyei", 21, "jane@example.com", "2345678901");
         s2.enrollSubject(math); s2.enrollSubject(english); s2.enrollSubject(art);
-        s2.addGrade(60); s2.addGrade(55); s2.addGrade(70);
-
+        s2.addGrade(60); grades[gradeCount++] = new Grade("GRD004", s2.getStudentID(), "Mathematics", "Core Subject", 60, now);
+        s2.addGrade(55); grades[gradeCount++] = new Grade("GRD005", s2.getStudentID(), "English", "Core Subject", 55, now);
+        s2.addGrade(70); grades[gradeCount++] = new Grade("GRD006", s2.getStudentID(), "Art", "Elective Subject", 70, now);
+    
         Student s3 = new RegularStudent("John Cena", 22, "mike@example.com", "3456789012");
         s3.enrollSubject(science); s3.enrollSubject(art); s3.enrollSubject(pe);
-        s3.addGrade(40); s3.addGrade(50); s3.addGrade(60);
-
+        s3.addGrade(40); grades[gradeCount++] = new Grade("GRD007", s3.getStudentID(), "Science", "Core Subject", 40, now);
+        s3.addGrade(50); grades[gradeCount++] = new Grade("GRD008", s3.getStudentID(), "Art", "Elective Subject", 50, now);
+        s3.addGrade(60); grades[gradeCount++] = new Grade("GRD009", s3.getStudentID(), "Physical Education", "Elective Subject", 60, now);
+    
         // Add 2 honors students
         Student s4 = new HonorsStudent("Afia Oduro", 20, "sarah@example.com", "4567890123");
         s4.enrollSubject(math); s4.enrollSubject(english); s4.enrollSubject(pe);
-        s4.addGrade(85); s4.addGrade(90); s4.addGrade(88);
-
+        s4.addGrade(85); grades[gradeCount++] = new Grade("GRD010", s4.getStudentID(), "Mathematics", "Core Subject", 85, now);
+        s4.addGrade(90); grades[gradeCount++] = new Grade("GRD011", s4.getStudentID(), "English", "Core Subject", 90, now);
+        s4.addGrade(88); grades[gradeCount++] = new Grade("GRD012", s4.getStudentID(), "Physical Education", "Elective Subject", 88, now);
+    
         Student s5 = new HonorsStudent("David Goliath", 21, "david@example.com", "5678901234");
         s5.enrollSubject(science); s5.enrollSubject(art); s5.enrollSubject(pe);
-        s5.addGrade(70); s5.addGrade(65); s5.addGrade(75);
-
+        s5.addGrade(70); grades[gradeCount++] = new Grade("GRD013", s5.getStudentID(), "Science", "Core Subject", 70, now);
+        s5.addGrade(65); grades[gradeCount++] = new Grade("GRD014", s5.getStudentID(), "Art", "Elective Subject", 65, now);
+        s5.addGrade(75); grades[gradeCount++] = new Grade("GRD015", s5.getStudentID(), "Physical Education", "Elective Subject", 75, now);
+    
         students[studentCount++] = s1;
         students[studentCount++] = s2;
         students[studentCount++] = s3;
         students[studentCount++] = s4;
         students[studentCount++] = s5;
     }
+}

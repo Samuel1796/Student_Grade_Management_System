@@ -1,5 +1,7 @@
 // Student.java
-public class Student {
+// Base class representing a student with personal info, grades, and subjects
+//  Contains core student management functionality
+public abstract class Student {
     protected String studentID;
     protected String name;
     protected int age;
@@ -16,12 +18,13 @@ public class Student {
     protected Subject[] enrolledSubjects;
     protected int subjectCount;
 
+//    Tracks total students for ID generation
     private static int studentCounter = 0;
 
 
-    public Student(String name, int age, String email, String phone) {
-        this(name, age, email, phone, 50, false);
-    }
+//    public Student(String name, int age, String email, String phone) {
+//        this(name, age, email, phone, 50, false);
+//    }
 
     public Student(String name, int age, String email, String phone, int passingGrade, boolean honorsEligible) {
         this.name = name;
@@ -59,7 +62,6 @@ public class Student {
     }
 
 //      Calculates the average grade for the student.
-
     public double calculateAverage() {
         if (gradeCount == 0) {
             return 0;
@@ -99,7 +101,6 @@ public class Student {
     }
 
 //     Returns a comma-separated string of enrolled subjects.
-
     public String getEnrolledSubjectsString() {
         if (subjectCount == 0) return "-";
         StringBuilder sb = new StringBuilder();
