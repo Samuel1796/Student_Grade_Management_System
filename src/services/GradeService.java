@@ -1,4 +1,5 @@
 package services;
+import java.io.*;
 import java.util.Date;
 import models.Grade;
 import models.Student;
@@ -6,14 +7,18 @@ import models.HonorsStudent;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import models.Subject;
+
 
 //Needed for the file writing
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 
 //Exception
-import java.io.IOException;
+class DuplicateGradeException extends Exception {
+    public DuplicateGradeException(String message) {
+        super(message);
+    }
+}
+
 
 public class GradeService {
     private final Grade[] grades;
@@ -70,7 +75,7 @@ public class GradeService {
             double electiveTotal = 0;
             int electiveCount = 0;
 
-            System.out.println("\nGRADE HISTORY");
+            System.out.println("GRADE HISTORY");
             System.out.println("_________________________________________________________________________");
             System.out.println("| GRD ID   | DATE        | SUBJECT         | TYPE            | GRADE    |");
             System.out.println("|________________________________________________________________________|");
@@ -97,7 +102,7 @@ public class GradeService {
 
             double average = (count > 0) ? (total / count) : 0.0;
             System.out.printf("%nCurrent Average: %.1f%%%n", average);
-            System.out.printf("Status: %s%n", (student.isPassing() ? "PASSING" : "FAILING"));
+            System.out.printf("Status: %s%n", (student.isPassing(this) ? "PASSING" : "FAILING"));
 
             System.out.println("\nTotal Grades: " + count);
             if (coreCount > 0) {
@@ -108,7 +113,7 @@ public class GradeService {
             }
 
             System.out.println("\nPerformance Summary:");
-            if (student.isPassing()) {
+            if (student.isPassing(this)) {
                 System.out.println("Passing all Core subjects");
                 System.out.printf("Meeting passing grade requirement (%d%%)%n", student.getPassingGrade());
             }
@@ -149,8 +154,8 @@ public class GradeService {
                 writer.write("Student: " + student.getStudentID() + " - " + student.getName() + "\n");
                 writer.write("Type: " + ((student instanceof models.HonorsStudent) ? "Honors Student" : "Regular Student") + "\n");
                 writer.write("Total Grades: " + countGradesForStudent(student) + "\n");
-                writer.write("Average: " + String.format("%.1f", student.calculateAverage()) + "%\n");
-                writer.write("Status: " + (student.isPassing() ? "PASSING" : "FAILING") + "\n");
+                writer.write("Average: " + String.format("%.1f", student.calculateAverage(this)) + "%\n");
+                writer.write("Status: " + (student.isPassing(this) ? "PASSING" : "FAILING") + "\n");
                 writer.write("\n");
             }
             // Detailed
@@ -174,7 +179,7 @@ public class GradeService {
             }
             // Performance summary
             writer.write("Performance Summary:\n");
-            if (student.isPassing()) {
+            if (student.isPassing(this)) {
                 writer.write("Passing all Core subjects\n");
                 writer.write("Meeting passing grade requirement (" + student.getPassingGrade() + "%)\n");
             } else {
@@ -185,5 +190,154 @@ public class GradeService {
                     "Regular Student - standard grading (passing grade: 50%)\n"));
         }
         return filePath;
+    }
+
+
+    public void bulkImportGrades(String filename, StudentService studentService) {
+        String dirPath = "./imports/";
+        String filePath = dirPath + filename + ".csv";
+        File file = new File(filePath);
+    
+        if (!file.exists()) {
+            System.out.println("File not found: " + filePath);
+            return;
+        }
+    
+        System.out.println("Validating file...");
+        int totalRows = 0;
+        int successCount = 0;
+        int failCount = 0;
+        List<String> failedRecords = new ArrayList<>();
+        List<String> failReasons = new ArrayList<>();
+    
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            // Skip the header row
+            String header = br.readLine();
+
+
+            String line;
+            int rowNum = 2;
+            while ((line = br.readLine()) != null) {
+                totalRows++;
+                String[] parts = line.split(",");
+                if (parts.length != 4) {
+                    failCount++;
+                    failedRecords.add("ROW " + rowNum + ": Invalid format");
+                    rowNum++;
+                    continue;
+                }
+                String studentId = parts[0].trim();
+                String subjectName = parts[1].trim();
+                String subjectType = parts[2].trim();
+                String gradeStr = parts[3].trim();
+    
+                Student student = studentService.findStudentById(studentId);
+                if (student == null) {
+                    failCount++;
+                    failedRecords.add("ROW " + rowNum + ": Invalid student ID (" + studentId + ")");
+                    rowNum++;
+                    continue;
+                }
+    
+                Subject subject = studentService.findSubjectByNameAndType(subjectName, subjectType);
+                if (subject == null) {
+                    failCount++;
+                    failedRecords.add("ROW " + rowNum + ": Invalid subject (" + subjectName + ", " + subjectType + ")");
+                    rowNum++;
+                    continue;
+                }
+    
+                int gradeValue;
+                try {
+                    gradeValue = Integer.parseInt(gradeStr);
+                    if (gradeValue < 0 || gradeValue > 100) {
+                        throw new NumberFormatException();
+                    }
+                } catch (NumberFormatException e) {
+                    failCount++;
+                    failedRecords.add("ROW " + rowNum + ": Grade out of range (" + gradeStr + ")");
+                    rowNum++;
+                    continue;
+                }
+    
+                if (isDuplicateGrade(studentId, subjectName, subjectType)) {
+                    System.out.printf("ROW %d: Duplicate grade found for student %s and subject %s (%s). Overwrite with new value? [Y/N]: ", rowNum, studentId, subjectName, subjectType);
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+                    String response = reader.readLine();
+                    if (response.equalsIgnoreCase("Y")) {
+                        updateGrade(studentId, subjectName, subjectType, gradeValue);
+                        successCount++;
+                        System.out.println("Grade updated with new value.");
+                    } else {
+                        failCount++;
+                        failedRecords.add("ROW " + rowNum + ": Duplicate grade not updated.");
+                    }
+                } else {
+                    Grade grade = new Grade(
+                            "GRD0" + (getGradeCount() + 1),
+                            studentId,
+                            subjectName,
+                            subjectType,
+                            gradeValue,
+                            new java.util.Date()
+                    );
+                    recordGrade(grade);
+                    successCount++;
+                }
+                rowNum++;
+            }
+        } catch (IOException e) {
+            System.out.println("Error reading file: " + e.getMessage());
+            return;
+        }
+    
+        // Import summary
+        System.out.println("IMPORT SUMMARY");
+        System.out.println("Total Rows: " + totalRows);
+        System.out.println("Successfully Imported: " + successCount);
+        System.out.println("Failed: " + failCount);
+        if (failCount > 0) {
+            System.out.println("Failed Records:");
+            for (String fail : failedRecords) {
+                System.out.println(fail);
+            }
+        }
+        System.out.println("Import completed!");
+        System.out.println(successCount + " grades added to system");
+    }
+
+    //Check for grade duplicates when importing
+    private boolean isDuplicateGrade(String studentId, String subjectName, String subjectType) {
+        for (int i = 0; i < gradeCount; i++) {
+            Grade g = grades[i];
+            if (g != null &&
+                    g.getStudentID().equalsIgnoreCase(studentId) &&
+                    g.getSubjectName().equalsIgnoreCase(subjectName) &&
+                    g.getSubjectType().equalsIgnoreCase(subjectType)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+
+
+
+
+
+    // Helper method to update the grade value for a duplicate
+    private void updateGrade(String studentId, String subjectName, String subjectType, int newValue) {
+        for (int i = 0; i < gradeCount; i++) {
+            Grade g = grades[i];
+            if (g != null &&
+                g.getStudentID().equalsIgnoreCase(studentId) &&
+                g.getSubjectName().equalsIgnoreCase(subjectName) &&
+                g.getSubjectType().equalsIgnoreCase(subjectType)) {
+                g.setValue(newValue);
+                g.setDate(new java.util.Date()); // Optionally update the date to now
+                break;
+            }
+        }
     }
 }

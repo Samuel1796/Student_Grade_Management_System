@@ -58,6 +58,26 @@ public class StudentService {
         return null;
     }
 
+    public Subject findSubjectByNameAndType(String name, String type) {
+        for (int i = 0; i < studentCount; i++) {
+            Student s = students[i];
+            Subject[] enrolledSubjects = s.getEnrolledSubjects();
+            if (enrolledSubjects != null) {
+                for (Subject subj : enrolledSubjects) {
+                    if (subj != null && subj.getSubjectName().equalsIgnoreCase(name)) {
+                        if ((type.equalsIgnoreCase("Core") && subj instanceof CoreSubject) ||
+                                (type.equalsIgnoreCase("Elective") && subj instanceof ElectiveSubject) ||
+                                (type.equalsIgnoreCase("Core Subject") && subj instanceof CoreSubject) ||
+                                (type.equalsIgnoreCase("Elective Subject") && subj instanceof ElectiveSubject)) {
+                            return subj;
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
     public int getStudentCount() {
         return studentCount;
     }
@@ -66,7 +86,7 @@ public class StudentService {
         return students;
     }
 
-    public void viewAllStudents() {
+    public void viewAllStudents( GradeService gradeService) {
         if (studentCount == 0) {
             System.out.println("No students available.");
             return;
@@ -78,7 +98,7 @@ public class StudentService {
         System.out.println("|_______________________________________________________________________________________________________________________________________________|");
         for (int i = 0; i < studentCount; i++) {
             Student student = students[i];
-            double avg = student.calculateAverage();
+            double avg = student.calculateAverage( gradeService);
             System.out.printf("| %-10s | %-20s | %-15s | %-9.1f | %-12s | %-20s | %-13d | %-18s |%n",
                     student.getStudentID(),
                     student.getName(),
