@@ -11,8 +11,8 @@ public class Grade {
     private final String studentID;
     private final String subjectName;
     private final String subjectType;
-    private final double value;
-    private final Date date;
+    private double value;
+    private Date date;
 
     public Grade(String gradeID, String studentID, String subjectName, String subjectType, double value, Date date) {
         this.gradeID = gradeID;
@@ -31,6 +31,16 @@ public class Grade {
     public String getSubjectType() { return subjectType; }
     public double getValue() { return value; }
     public Date getDate() { return new Date(date.getTime()); }
+
+
+//    Setters
+public void setValue(double value) {
+    this.value = value;
+}
+
+    public void setDate(java.util.Date date) {
+        this.date = date;
+    }
 
     @Override
     public String toString() {

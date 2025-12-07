@@ -3,6 +3,9 @@
 //  Contains core student management functionality
 
 package models;
+
+import services.GradeService;
+
 public abstract class Student {
     protected String studentID;
     protected String name;
@@ -64,20 +67,24 @@ public abstract class Student {
     }
 
 //      Calculates the average grade for the student.
-    public double calculateAverage() {
-        if (gradeCount == 0) {
-            return 0;
+public double calculateAverage(GradeService gradeService) {
+    double total = 0.0;
+    int count = 0;
+    Grade[] grades = gradeService.getGrades();
+    int gradeCount = gradeService.getGradeCount();
+    for (int i = 0; i < gradeCount; i++) {
+        Grade g = grades[i];
+        if (g != null && g.getStudentID().equalsIgnoreCase(this.getStudentID())) {
+            total += g.getValue();
+            count++;
         }
-        double sum = 0;
-        for (int i = 0; i < gradeCount; i++) {
-            sum += grades[i];
-        }
-        return sum / gradeCount;
     }
+    return count > 0 ? total / count : 0.0;
+}
 
 
-    public boolean isPassing() {
-        return calculateAverage() >= passingGrade;
+    public boolean isPassing(GradeService gradeService) {
+        return calculateAverage(gradeService) >= passingGrade;
     }
 
 
@@ -142,6 +149,10 @@ public abstract class Student {
 
     public String getStatus() {
         return status;
+    }
+
+    public Subject[] getEnrolledSubjects() {
+        return enrolledSubjects;
     }
 
     // SETTERS

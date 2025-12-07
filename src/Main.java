@@ -1,18 +1,14 @@
+import models.*;
 import services.StudentService;
 import services.GradeService;
 import services.MenuService;
 
-import models.Student;
-import models.HonorsStudent;
-import models.RegularStudent;
-import models.Grade;
-
 import java.util.Scanner;
 
-/**
- * Main application class for Student Grade Management System.
- * Delegates operations to service classes.
- */
+
+//  Main application class for Student Grade Management System.
+// Delegates operations to service classes.
+
 public class Main {
     public static void main(String[] args) {
         StudentService studentService = new StudentService(50);
@@ -25,6 +21,7 @@ public class Main {
         int[] studentCountRef = {studentService.getStudentCount()};
         int[] gradeCountRef = {gradeService.getGradeCount()};
         StudentService.initializeSampleStudents(students, grades, studentCountRef, gradeCountRef);
+
         // Update the counts in the services
         studentService.setStudentCount(studentCountRef[0]);
         gradeService.setGradeCount(gradeCountRef[0]);
@@ -74,29 +71,126 @@ public class Main {
                     break;
                 case 2:
                     // View Students
-                    studentService.viewAllStudents();
+                    studentService.viewAllStudents(gradeService);
                     break;
                 case 3:
-                    // Record Grade
+                    System.out.println();
+                    System.out.println("RECORD GRADE");
+                    System.out.println("_________________________");
+                
+                    // GET STUDENT ID
                     System.out.print("Enter Student ID: ");
                     String studentID = sc.nextLine();
                     Student foundStudent = studentService.findStudentById(studentID);
+                    double avg = foundStudent != null ? foundStudent.calculateAverage(gradeService) : 0;
+                
                     if (foundStudent == null) {
                         System.out.println("Student not found!");
                         break;
                     }
-                    System.out.print("Enter Subject Name: ");
-                    String subjectName = sc.nextLine();
-                    System.out.print("Enter Subject Type: ");
-                    String subjectType = sc.nextLine();
-                    System.out.print("Enter Grade Value: ");
-                    double value = sc.nextDouble();
+                
+                    System.out.println();
+                    System.out.println("Student Details: ");
+                    System.out.printf("Name: %s%n", foundStudent.getName());
+                    System.out.printf("Type: %s%n", (foundStudent instanceof HonorsStudent) ? "Honors Student" : "Regular Student");
+                    System.out.println();
+                    System.out.printf("Current Average: %.1f%n", avg);
+                    System.out.println();
+                
+                    // SELECT SUBJECT TYPE
+                    System.out.println("Subject type:");
+                    System.out.println("1. Core Subject (Mathematics, English, Science)");
+                    System.out.println("2. Elective Subject (Art, Physical Education)");
+                    System.out.println();
+                
+                    System.out.print("Select type (1-2): ");
+                    int subjectType = sc.nextInt();
                     sc.nextLine();
-                    Grade grade = new Grade("G" + (gradeService.getGradeCount() + 1), studentID, subjectName, subjectType, value, new java.util.Date());
-                    if (gradeService.recordGrade(grade)) {
-                        System.out.println("Grade recorded successfully!");
+                    System.out.println();
+                
+                    Subject subject = null;
+                
+                    if (subjectType == 1) {
+                        System.out.println("Available Core Subject:");
+                        System.out.println("1. Mathematics");
+                        System.out.println("2. English");
+                        System.out.println("3. Science");
+                        System.out.print("Select subject (1-3): ");
+                        int coreSubject = sc.nextInt();
+                        sc.nextLine();
+                        System.out.println();
+                
+                        switch (coreSubject) {
+                            case 1: subject = new models.CoreSubject("Mathematics", "MATH101"); break;
+                            case 2: subject = new models.CoreSubject("English", "ENG101"); break;
+                            case 3: subject = new models.CoreSubject("Science", "SCI101"); break;
+                            default:
+                                System.out.println("Invalid choice");
+                                break;
+                        }
+                    } else if (subjectType == 2) {
+                        System.out.println("Available Elective Subject:");
+                        System.out.println("1. Art");
+                        System.out.println("2. Physical Education");
+                        System.out.print("Select subject (1-2): ");
+                        int electiveSubject = sc.nextInt();
+                        sc.nextLine();
+                        System.out.println();
+                
+                        switch (electiveSubject) {
+                            case 1: subject = new models.ElectiveSubject("Art", "ART101"); break;
+                            case 2: subject = new models.ElectiveSubject("Physical Education", "PE101"); break;
+                            default:
+                                System.out.println("Invalid choice");
+                                break;
+                        }
                     } else {
-                        System.out.println("Grade database full!");
+                        System.out.println("Invalid subject type selection!");
+                        break;
+                    }
+                
+                    if (subject == null) {
+                        break;
+                    }
+                
+                    // ENTER GRADE
+                    System.out.print("Enter grade (0-100): ");
+                    double gradeValue = sc.nextDouble();
+                    sc.nextLine();
+                
+                    if (gradeValue < 0 || gradeValue > 100) {
+                        System.out.println("Invalid grade, must be between 0 and 100");
+                        break;
+                    }
+                    java.util.Date date = new java.util.Date();
+                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd-MM-yyyy");
+                
+                    // Generate Grade ID
+                    String nextGradeID = String.format("GRD%03d", gradeService.getGradeCount() + 1);
+                
+                    // CONFIRMATION
+                    System.out.println("CONFIRMATION:");
+                    System.out.println("_________________________");
+                    System.out.printf("Grade ID: %s%n", nextGradeID);
+                    System.out.printf("Student: %s - %s%n", foundStudent.getStudentID(), foundStudent.getName());
+                    System.out.printf("Subject: %s (%s)%n", subject.getSubjectName(), subject.getSubjectType());
+                    System.out.printf("Grade: %.1f%n", gradeValue);
+                    System.out.printf("Date: %s%n", sdf.format(date));
+                    System.out.println("_________________________");
+                    System.out.println();
+                
+                    System.out.print("Confirm? (Y/N): ");
+                    String confirm = sc.nextLine();
+                
+                    if (confirm.equalsIgnoreCase("Y")) {
+                        Grade grade = new Grade(nextGradeID, foundStudent.getStudentID(), subject.getSubjectName(), subject.getSubjectType(), gradeValue, date);
+                        if (gradeService.recordGrade(grade)) {
+                            System.out.printf("Grade recorded successfully! Grade ID: %s%n", nextGradeID);
+                        } else {
+                            System.out.println("Grade database full!");
+                        }
+                    } else {
+                        System.out.println("Grade recording canceled.");
                     }
                     break;
                 case 4:
@@ -157,6 +251,19 @@ public class Main {
                         System.out.println("Export failed: " + e.getMessage());
                     }
                     break;
+
+                case 7:
+                    System.out.println("BULK IMPORT GRADES");
+                    System.out.println("_______________________________");
+                    System.out.println("Place your CSV file in: ./imports/");
+                    System.out.println("CSV Format Required:");
+                    System.out.println("StudentID,SubjectName,SubjectType,Grade");
+                    System.out.println("Example: STU001,Mathematics,Core,85");
+                    System.out.print("Enter filename (without extension): ");
+                    String importFilename = sc.nextLine().trim();
+                    gradeService.bulkImportGrades(importFilename, studentService);
+                break;
+
                 case 10:
                     System.out.println("Thank you for using Student Grade Management System. Goodbye!");
                     running = false;
