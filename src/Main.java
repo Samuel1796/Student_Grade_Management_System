@@ -1,4 +1,5 @@
 import models.*;
+import services.StatisticsService;
 import services.StudentService;
 import services.GradeService;
 import services.MenuService;
@@ -256,6 +257,18 @@ public class Main {
                         String importFilename = sc.nextLine().trim();
                         gradeService.bulkImportGrades(importFilename, studentService);
                     break;
+
+                    case 8:
+                        // STATISTICAL ANALYSIS
+                        StatisticsService statsService = new StatisticsService(
+                                gradeService.getGrades(),
+                                gradeService.getGradeCount(),
+                                studentService.getStudents(),
+                                studentService.getStudentCount(),
+                                gradeService
+                        );
+                        statsService.printStatisticsReport();
+                        break;
 
                     case 9:
                         System.out.println("SEARCH STUDENTS");
