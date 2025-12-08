@@ -1,4 +1,5 @@
 package services;
+
 import java.io.*;
 import java.util.Date;
 import models.Grade;
@@ -10,18 +11,28 @@ import java.util.List;
 import models.Subject;
 import exceptions.*;
 
-
-
-
+/**
+ * Service class for managing grades, including recording, reporting, exporting, and importing grades.
+ */
 public class GradeService {
     private final Grade[] grades;
     private int gradeCount;
 
+    /**
+     * Constructs a GradeService with a specified maximum number of grades.
+     * @param maxGrades Maximum number of grades that can be stored.
+     */
     public GradeService(int maxGrades) {
         grades = new Grade[maxGrades];
         gradeCount = 0;
     }
 
+    /**
+     * Records a new grade in the system.
+     * @param grade Grade object to record.
+     * @return true if the grade was recorded successfully.
+     * @throws AppExceptions if the grade database is full.
+     */
     public boolean recordGrade(Grade grade) {
         if (gradeCount >= grades.length) {
             throw new AppExceptions("Grade database full!");
@@ -30,25 +41,39 @@ public class GradeService {
         return true;
     }
 
+    /**
+     * Returns the array of all grades.
+     */
     public Grade[] getGrades() {
         return grades;
     }
 
+    /**
+     * Returns the current count of recorded grades.
+     */
     public int getGradeCount() {
         return gradeCount;
     }
 
+    /**
+     * Sets the grade count.
+     * @param count New grade count.
+     */
     public void setGradeCount(int count) {
         this.gradeCount = count;
     }
 
+    /**
+     * Displays a detailed grade report for a given student.
+     * @param student Student whose grades are to be reported.
+     */
     public void viewGradeReport(Student student) {
         SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
 
         System.out.printf("Student: %s - %s%n", student.getStudentID(), student.getName());
         System.out.printf("Type: %s%n", (student instanceof HonorsStudent) ? "Honors Student" : "Regular Student");
 
-        // collect grades for this student from the central grades array
+        // Collect grades for this student from the central grades array
         List<Grade> studentGrades = new ArrayList<>();
         for (int i = 0; i < gradeCount; i++) {
             Grade g = grades[i];
@@ -73,6 +98,7 @@ public class GradeService {
             System.out.println("| GRD ID   | DATE        | SUBJECT         | TYPE            | GRADE    |");
             System.out.println("|________________________________________________________________________|");
 
+            // Print each grade and accumulate statistics
             for (Grade gr : studentGrades) {
                 System.out.printf("| %-8s | %-10s | %-15s | %-15s | %-8.1f |%n",
                         gr.getGradeID(),
@@ -119,8 +145,11 @@ public class GradeService {
         }
     }
 
-    // Additional methods for export, GPA, bulk import, statistics
-
+    /**
+     * Counts the number of grades recorded for a specific student.
+     * @param student Student whose grades are to be counted.
+     * @return Number of grades for the student.
+     */
     public int countGradesForStudent(Student student) {
         int count = 0;
         for (int i = 0; i < gradeCount; i++) {
@@ -132,6 +161,14 @@ public class GradeService {
         return count;
     }
 
+    /**
+     * Exports a student's grade report to a text file.
+     * @param student Student whose report is to be exported.
+     * @param option 1 for summary, 2 for detailed, 3 for both.
+     * @param filename Name of the output file (without extension).
+     * @return Path to the exported file.
+     * @throws IOException If file writing fails.
+     */
     public String exportGradeReport(Student student, int option, String filename) throws IOException {
         // Ensure reports directory exists
         File reportsDir = new File("./reports");
@@ -140,7 +177,7 @@ public class GradeService {
         }
         String filePath = "./reports/" + filename + ".txt";
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
-            // Summary
+            // Write summary if requested
             if (option == 1 || option == 3) {
                 writer.write("GRADE REPORT SUMMARY\n");
                 writer.write("====================\n");
@@ -151,7 +188,7 @@ public class GradeService {
                 writer.write("Status: " + (student.isPassing(this) ? "PASSING" : "FAILING") + "\n");
                 writer.write("\n");
             }
-            // Detailed
+            // Write detailed report if requested
             if (option == 2 || option == 3) {
                 writer.write("GRADE HISTORY\n");
                 writer.write("=============\n");
@@ -170,7 +207,7 @@ public class GradeService {
                 }
                 writer.write("\n");
             }
-            // Performance summary
+            // Write performance summary
             writer.write("Performance Summary:\n");
             if (student.isPassing(this)) {
                 writer.write("Passing all Core subjects\n");
@@ -185,29 +222,33 @@ public class GradeService {
         return filePath;
     }
 
-
+    /**
+     * Bulk imports grades from a CSV file.
+     * @param filename Name of the CSV file (without extension).
+     * @param studentService StudentService instance for student lookup.
+     */
     public void bulkImportGrades(String filename, StudentService studentService) {
         // Build file path for import
         String dirPath = "./imports/";
         String filePath = dirPath + filename + ".csv";
         File file = new File(filePath);
-    
+
         if (!file.exists()) {
             System.out.println("File not found: " + filePath);
             return;
         }
-    
+
         System.out.println("Validating file...");
         int totalRows = 0;
         int successCount = 0;
         int failCount = 0;
         List<String> failedRecords = new ArrayList<>();
         List<String> failReasons = new ArrayList<>();
-    
+
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             // Skip the header row
             String header = br.readLine();
-    
+
             String line;
             int rowNum = 2;
             // Read each line and process grade import
@@ -225,7 +266,7 @@ public class GradeService {
                 String subjectName = parts[1].trim();
                 String subjectType = parts[2].trim();
                 String gradeStr = parts[3].trim();
-    
+
                 Student student;
                 try {
                     // Find student by ID, throws exception if not found
@@ -236,7 +277,7 @@ public class GradeService {
                     rowNum++;
                     continue;
                 }
-    
+
                 Subject subject = studentService.findSubjectByNameAndType(subjectName, subjectType);
                 if (subject == null) {
                     // Handles invalid subject scenario
@@ -245,7 +286,7 @@ public class GradeService {
                     rowNum++;
                     continue;
                 }
-    
+
                 int gradeValue;
                 try {
                     gradeValue = Integer.parseInt(gradeStr);
@@ -259,7 +300,7 @@ public class GradeService {
                     rowNum++;
                     continue;
                 }
-    
+
                 // Check for duplicate grade and prompt user for overwrite
                 if (isDuplicateGrade(studentId, subjectName, subjectType)) {
                     System.out.printf("ROW %d: Duplicate grade found for student %s and subject %s (%s). Overwrite with new value? [Y/N]: ", rowNum, studentId, subjectName, subjectType);
@@ -292,7 +333,7 @@ public class GradeService {
             System.out.println("Error reading file: " + e.getMessage());
             return;
         }
-    
+
         // Print import summary
         System.out.println("IMPORT SUMMARY");
         System.out.println("Total Rows: " + totalRows);
@@ -308,8 +349,14 @@ public class GradeService {
         System.out.println(successCount + " grades added to system");
     }
 
-    //Check for grade duplicates when importing
-     public boolean isDuplicateGrade(String studentId, String subjectName, String subjectType) {
+    /**
+     * Checks for duplicate grades for a student and subject.
+     * @param studentId Student ID.
+     * @param subjectName Subject name.
+     * @param subjectType Subject type.
+     * @return true if a duplicate grade exists, false otherwise.
+     */
+    public boolean isDuplicateGrade(String studentId, String subjectName, String subjectType) {
         for (int i = 0; i < gradeCount; i++) {
             Grade g = grades[i];
             if (g != null &&
@@ -322,14 +369,14 @@ public class GradeService {
         return false;
     }
 
-
-
-
-
-
-
-    // Helper method to update the grade value for a duplicate
-     public void updateGrade(String studentId, String subjectName, String subjectType, int newValue) {
+    /**
+     * Updates the grade value for a duplicate grade entry.
+     * @param studentId Student ID.
+     * @param subjectName Subject name.
+     * @param subjectType Subject type.
+     * @param newValue New grade value to set.
+     */
+    public void updateGrade(String studentId, String subjectName, String subjectType, int newValue) {
         for (int i = 0; i < gradeCount; i++) {
             Grade g = grades[i];
             if (g != null &&

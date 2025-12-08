@@ -18,7 +18,14 @@ public class StatisticsService {
     private final int studentCount;
     private final GradeService gradeService;
 
-
+    /**
+     * Constructs a StatisticsService with the provided grades, students, and supporting services.
+     * @param grades Array of Grade objects.
+     * @param gradeCount Number of grades recorded.
+     * @param students Array of Student objects.
+     * @param studentCount Number of students.
+     * @param gradeService GradeService instance for grade operations.
+     */
     public StatisticsService(Grade[] grades, int gradeCount, Student[] students, int studentCount, GradeService gradeService) {
         this.grades = grades;
         this.gradeCount = gradeCount;
@@ -27,7 +34,10 @@ public class StatisticsService {
         this.gradeService = gradeService;
     }
 
-    // Helper: Get all grade values
+    /**
+     * Helper method to get all grade values as a list.
+     * @return List of grade values.
+     */
     private List<Double> getAllGradeValues() {
         List<Double> values = new ArrayList<>();
         for (int i = 0; i < gradeCount; i++) {
@@ -38,7 +48,10 @@ public class StatisticsService {
         return values;
     }
 
-    // Mean (Average)
+    /**
+     * Calculates the mean (average) of all grades.
+     * @return Mean value.
+     */
     public double calculateMean() {
         List<Double> values = getAllGradeValues();
         if (values.isEmpty()) return 0.0;
@@ -47,7 +60,10 @@ public class StatisticsService {
         return sum / values.size();
     }
 
-    // Median
+    /**
+     * Calculates the median of all grades.
+     * @return Median value.
+     */
     public double calculateMedian() {
         List<Double> values = getAllGradeValues();
         if (values.isEmpty()) return 0.0;
@@ -60,24 +76,43 @@ public class StatisticsService {
         }
     }
 
-    // Mode
+    /**
+     * Calculates the mode of all grades. Returns 0 if no mode exists.
+     * @return Mode value or 0 if no mode.
+     */
     public double calculateMode() {
         List<Double> values = getAllGradeValues();
         if (values.isEmpty()) return 0.0;
-        Map<Double, Integer> freq = new HashMap<>();
-        for (double v : values) freq.put(v, freq.getOrDefault(v, 0) + 1);
-        int maxFreq = 0;
-        double mode = values.get(0);
-        for (Map.Entry<Double, Integer> entry : freq.entrySet()) {
-            if (entry.getValue() > maxFreq) {
-                maxFreq = entry.getValue();
+
+        // Count occurrences of each grade value
+        Map<Double, Integer> countMap = new HashMap<>();
+        for (double v : values) {
+            if (countMap.containsKey(v)) {
+                countMap.put(v, countMap.get(v) + 1);
+            } else {
+                countMap.put(v, 1);
+            }
+        }
+
+        double mode = 0.0;
+        int maxCount = 1;
+        for (Map.Entry<Double, Integer> entry : countMap.entrySet()) {
+            if (entry.getValue() > maxCount) {
+                maxCount = entry.getValue();
                 mode = entry.getKey();
             }
+        }
+        // If all frequencies are 1 (no mode), return 0
+        if (maxCount == 1) {
+            return 0.0;
         }
         return mode;
     }
 
-    // Standard Deviation
+    /**
+     * Calculates the standard deviation of all grades.
+     * @return Standard deviation value.
+     */
     public double calculateStdDev() {
         List<Double> values = getAllGradeValues();
         if (values.isEmpty()) return 0.0;
@@ -87,7 +122,10 @@ public class StatisticsService {
         return Math.sqrt(sumSq / values.size());
     }
 
-    // Range
+    /**
+     * Calculates the range of all grades.
+     * @return Range value.
+     */
     public double calculateRange() {
         List<Double> values = getAllGradeValues();
         if (values.isEmpty()) return 0.0;
@@ -96,21 +134,30 @@ public class StatisticsService {
         return max - min;
     }
 
-    // Highest Grade
+    /**
+     * Gets the highest grade value.
+     * @return Highest grade.
+     */
     public double getHighestGrade() {
         List<Double> values = getAllGradeValues();
         if (values.isEmpty()) return 0.0;
         return Collections.max(values);
     }
 
-    // Lowest Grade
+    /**
+     * Gets the lowest grade value.
+     * @return Lowest grade.
+     */
     public double getLowestGrade() {
         List<Double> values = getAllGradeValues();
         if (values.isEmpty()) return 0.0;
         return Collections.min(values);
     }
 
-    // Subject Performance
+    /**
+     * Calculates average grade for each subject.
+     * @return Map of subject names to average grades.
+     */
     public Map<String, Double> getSubjectAverages() {
         Map<String, List<Double>> subjectGrades = new HashMap<>();
         for (int i = 0; i < gradeCount; i++) {
@@ -128,7 +175,10 @@ public class StatisticsService {
         return averages;
     }
 
-    // Grade Distribution (by ranges)
+    /**
+     * Gets the distribution of grades by defined ranges.
+     * @return Map of grade ranges to counts.
+     */
     public Map<String, Integer> getGradeDistribution() {
         int[] bins = new int[5]; // 0-59, 60-69, 70-79, 80-89, 90-100
         for (int i = 0; i < gradeCount; i++) {
@@ -143,15 +193,18 @@ public class StatisticsService {
             }
         }
         Map<String, Integer> dist = new LinkedHashMap<>();
-        dist.put("0-59%", bins[0]);
-        dist.put("60-69%", bins[1]);
-        dist.put("70-79%", bins[2]);
-        dist.put("80-89%", bins[3]);
-        dist.put("90-100%", bins[4]);
+        dist.put("0-59", bins[0]);
+        dist.put("60-69", bins[1]);
+        dist.put("70-79", bins[2]);
+        dist.put("80-89", bins[3]);
+        dist.put("90-100", bins[4]);
         return dist;
     }
 
-    // Student Type Comparison
+    /**
+     * Calculates average grades for each student type (Regular and Honors).
+     * @return Map of student type to average grade.
+     */
     public Map<String, Double> getStudentTypeAverages() {
         double regularSum = 0.0, honorsSum = 0.0;
         int regularCount = 0, honorsCount = 0;
@@ -173,11 +226,11 @@ public class StatisticsService {
         return result;
     }
 
-    // Utility for Student average calculation from grades array
-    // Add this method to Student.java if not present
-    // public double calculateAverageFromGrades(Grade[] grades, int gradeCount) { ... }
 
-    // Print full statistics report
+
+    /**
+     * Prints a full statistics report to the console.
+     */
     public void printStatisticsReport() {
         System.out.println("STATISTICAL ANALYSIS");
         System.out.println("====================");
@@ -218,10 +271,9 @@ public class StatisticsService {
         }
     }
 
-
-
     /**
      * Prints a detailed GPA report for a student.
+     * @param student Student whose GPA report is to be printed.
      */
     public void printStudentGPAReport(Student student) {
         Grade[] grades = gradeService.getGrades();
@@ -280,6 +332,11 @@ public class StatisticsService {
         }
     }
 
+    /**
+     * Converts a grade value to GPA on a 4.0 scale.
+     * @param grade Grade value.
+     * @return GPA value.
+     */
     private double convertToGPA(double grade) {
         if (grade >= 93) return 4.0;
         if (grade >= 90) return 3.7;
@@ -294,6 +351,11 @@ public class StatisticsService {
         return 0.0;
     }
 
+    /**
+     * Converts a grade value to a letter grade.
+     * @param grade Grade value.
+     * @return Letter grade as a String.
+     */
     private String getLetterGrade(double grade) {
         if (grade >= 93) return "A";
         if (grade >= 90) return "A-";
