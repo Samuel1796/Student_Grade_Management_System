@@ -14,25 +14,42 @@ import java.util.Date;
 import java.util.List;
 import java.util.regex.Pattern;
 
-
-//  Handles student-related operations such as adding, searching, and listing students.
-
+/**
+ * Handles student-related operations such as adding, searching, and listing students.
+ */
 public class StudentService {
     private final Student[] students;
     private int studentCount;
+
+//    REGULAR EXPRESSION FOR EMAIL VALIDATION
     private static final Pattern EMAIL_PATTERN = Pattern.compile(
             "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$"
     );
 
+    /**
+     * Constructs a StudentService with a specified maximum number of students.
+     * @param maxStudents Maximum number of students that can be stored.
+     */
     public StudentService(int maxStudents) {
         students = new Student[maxStudents];
         studentCount = 0;
     }
 
+    /**
+     * Validates the format of an email address.
+     * @param email Email address to validate.
+     * @return true if the email is valid, false otherwise.
+     */
     public boolean isValidEmail(String email) {
         return EMAIL_PATTERN.matcher(email).matches();
     }
 
+    /**
+     * Checks if a student with the given name and email already exists.
+     * @param name Student name.
+     * @param email Student email.
+     * @return true if duplicate exists, false otherwise.
+     */
     public boolean isDuplicateStudent(String name, String email) {
         for (int i = 0; i < studentCount; i++) {
             Student s = students[i];
@@ -43,6 +60,12 @@ public class StudentService {
         return false;
     }
 
+    /**
+     * Adds a new student to the system.
+     * @param student Student object to add.
+     * @return true if added successfully.
+     * @throws AppExceptions if the student database is full.
+     */
     public boolean addStudent(Student student) {
         if (studentCount >= students.length) {
             throw new AppExceptions("Student database full!");
@@ -51,6 +74,12 @@ public class StudentService {
         return true;
     }
 
+    /**
+     * Finds a student by their ID.
+     * @param studentID Student ID to search for.
+     * @return Student object if found.
+     * @throws StudentNotFoundException if not found.
+     */
     public Student findStudentById(String studentID) {
         for (int i = 0; i < studentCount; i++) {
             String currentId = students[i].getStudentID();
@@ -61,7 +90,11 @@ public class StudentService {
         throw new StudentNotFoundException(studentID);
     }
 
-    // Search by partial/full name
+    /**
+     * Searches for students by partial or full name.
+     * @param namePart Name or part of name to search.
+     * @return Array of matching Student objects.
+     */
     public Student[] searchStudentsByName(String namePart) {
         List<Student> results = new ArrayList<>();
         for (int i = 0; i < studentCount; i++) {
@@ -73,8 +106,13 @@ public class StudentService {
         return results.toArray(new Student[0]);
     }
 
-
-    // Search by grade range
+    /**
+     * Searches for students whose average grade falls within a specified range.
+     * @param min Minimum average grade.
+     * @param max Maximum average grade.
+     * @param gradeService GradeService instance for grade lookup.
+     * @return Array of matching Student objects.
+     */
     public Student[] searchStudentsByGradeRange(double min, double max, GradeService gradeService) {
         List<Student> results = new ArrayList<>();
         for (int i = 0; i < studentCount; i++) {
@@ -87,7 +125,11 @@ public class StudentService {
         return results.toArray(new Student[0]);
     }
 
-    // Search by student type
+    /**
+     * Searches for students by type (Honors or Regular).
+     * @param honors true for Honors students, false for Regular students.
+     * @return Array of matching Student objects.
+     */
     public Student[] searchStudentsByType(boolean honors) {
         List<Student> results = new ArrayList<>();
         for (int i = 0; i < studentCount; i++) {
@@ -99,6 +141,12 @@ public class StudentService {
         return results.toArray(new Student[0]);
     }
 
+    /**
+     * Finds a subject by its name and type for any enrolled student.
+     * @param name Subject name.
+     * @param type Subject type ("Core", "Elective", etc.).
+     * @return Subject object if found, null otherwise.
+     */
     public Subject findSubjectByNameAndType(String name, String type) {
         for (int i = 0; i < studentCount; i++) {
             Student s = students[i];
@@ -119,15 +167,27 @@ public class StudentService {
         return null;
     }
 
+    /**
+     * Gets the current count of students.
+     * @return Number of students.
+     */
     public int getStudentCount() {
         return studentCount;
     }
 
+    /**
+     * Gets the array of all students.
+     * @return Array of Student objects.
+     */
     public Student[] getStudents() {
         return students;
     }
 
-    public void viewAllStudents( GradeService gradeService) {
+    /**
+     * Displays a formatted list of all students and their statistics.
+     * @param gradeService GradeService instance for grade lookup.
+     */
+    public void viewAllStudents(GradeService gradeService) {
         if (studentCount == 0) {
             System.out.println("No students available.");
             return;
@@ -139,7 +199,7 @@ public class StudentService {
         System.out.println("|_______________________________________________________________________________________________________________________________________________|");
         for (int i = 0; i < studentCount; i++) {
             Student student = students[i];
-            double avg = student.calculateAverage( gradeService);
+            double avg = student.calculateAverage(gradeService);
             System.out.printf("| %-10s | %-20s | %-15s | %-9.1f | %-12s | %-20s | %-13d | %-18s |%n",
                     student.getStudentID(),
                     student.getName(),
@@ -153,7 +213,13 @@ public class StudentService {
         System.out.println("|=============================================================================================================================================|");
     }
 
-    // Static method to initialize sample students and grades
+    /**
+     * Static method to initialize sample students and grades for demonstration or testing.
+     * @param students Array to store students.
+     * @param grades Array to store grades.
+     * @param studentCountRef Reference to student count (as single-element array).
+     * @param gradeCountRef Reference to grade count (as single-element array).
+     */
     public static void initializeSampleStudents(Student[] students, Grade[] grades, int[] studentCountRef, int[] gradeCountRef) {
         // Core subjects
         Subject math = new CoreSubject("Mathematics", "MATH101");
@@ -203,12 +269,12 @@ public class StudentService {
         students[studentCountRef[0]++] = s4;
         students[studentCountRef[0]++] = s5;
     }
+
+    /**
+     * Sets the student count (used for administrative purposes).
+     * @param count New student count.
+     */
     public void setStudentCount(int count) {
         this.studentCount = count;
     }
-
-
-
-
-
 }

@@ -23,8 +23,10 @@ public class GradeServiceTest {
         student = new Student("Samuel B", 21, "das@gmail.com", "0557272539", 50, false);
     }
 
+
+
     @Test
-    public void testrecordGrade() {
+    public void testRecordGrade() {
         grade = new Grade("GRD001", "STU001", "English", "Core Subject", 89, new Date());
         assertTrue(gradeService.recordGrade(grade));
         assertEquals(1, gradeService.getGradeCount());

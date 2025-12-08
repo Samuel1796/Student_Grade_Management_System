@@ -27,10 +27,6 @@ public class Student {
     private static int studentCounter = 0;
 
 
-//    public Student(String name, int age, String email, String phone) {
-//        this(name, age, email, phone, 50, false);
-//    }
-
     public Student(String name, int age, String email, String phone, int passingGrade, boolean honorsEligible) {
         this.name = name;
         this.age = age;
