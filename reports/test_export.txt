@@ -1,0 +1,16 @@
+GRADE REPORT SUMMARY
+====================
+Student: STU001 - Test Student
+Type: Regular Student
+Total Grades: 0
+Average: 80.0%
+Status: PASSING
+
+GRADE HISTORY
+=============
+GRD ID   DATE         SUBJECT         TYPE            GRADE   
+
+Performance Summary:
+Passing all Core subjects
+Meeting passing grade requirement (50%)
+Regular Student - standard grading (passing grade: 50%)
