@@ -10,6 +10,12 @@ import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+
+/**
+ * Unit tests for GradeService.
+ * Verifies grade recording, updating, and duplicate detection.
+ */
+
 public class GradeServiceTest {
 
     //    Initializes gradeservice, student object and other objects for testing
@@ -17,12 +23,16 @@ public class GradeServiceTest {
     Student student;
     Grade grade;
 
+
+    /**
+     * Sets up GradeService and a sample student before each test.
+     */
+
     @BeforeEach
     public void setUp() {
         gradeService = new GradeService(10);
         student = new Student("Samuel B", 21, "das@gmail.com", "0557272539", 50, false);
     }
-
 
 
     @Test
@@ -67,6 +77,31 @@ public class GradeServiceTest {
         gradeService.updateGrade("STU001", "English", "Core Subject", 1);
         assertEquals(1, gradeService.getGrades()[0].getValue());
     }
+
+//EDGE CASES
+
+//    @Test
+//    void testRecordInvalidGradeNegative() {
+//        Grade invalidGrade = new Grade("GRD002", "STU001", "Math", "Core Subject", -5, new Date());
+//        // Assuming GradeService should throw an exception for invalid grade
+//        assertThrows(AppExceptions.class, () -> gradeService.recordGrade(invalidGrade));
+//    }
+
+//    @Test
+//    void testRecordInvalidGradeAbove100() {
+//        Grade invalidGrade = new Grade("GRD003", "STU001", "Math", "Core Subject", 105, new Date());
+//        assertThrows(AppExceptions.class, () -> gradeService.recordGrade(invalidGrade));
+//    }
+
+//    @Test
+//    void testDuplicateGradeEntry() {
+//        Grade grade1 = new Grade("GRD004", "STU001", "Math", "Core Subject", 80, new Date());
+//        Grade grade2 = new Grade("GRD004", "STU001", "Math", "Core Subject", 80, new Date());
+//        gradeService.recordGrade(grade1);
+//        // Should throw exception or return false for duplicate
+//        assertThrows(AppExceptions.class, () -> gradeService.recordGrade(grade2));
+//    }
+
 
 
 

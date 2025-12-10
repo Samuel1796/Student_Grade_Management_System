@@ -10,6 +10,11 @@ import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Unit tests for StatisticsService.
+ * Verifies statistical calculations on grades and students.
+ */
+
 class StatisticsServiceTest {
 
 //    Instances of all objects needed
@@ -17,7 +22,9 @@ class StatisticsServiceTest {
     StatisticsService statisticsService;
     Student student;
 
-//    A set up that add a new student, and 2 grades for testing
+    /**
+     * Sets up a new RegularStudent and adds grades for testing.
+     */
     @BeforeEach
     void setUp() {
     gradeService = new GradeService(10);
@@ -93,4 +100,20 @@ class StatisticsServiceTest {
         assertEquals(0, statisticsService.getStudentTypeAverages().get("Honors Students"));
 
     }
+
+
+//    EDGE CASES
+//@Test
+//void testStatisticsWithInvalidGrades() {
+//    Grade invalidGrade = new Grade("GRD004", student.getStudentID(), "Math", "Core Subject", -10, new Date());
+//    gradeService.recordGrade(invalidGrade);
+//    // Should ignore invalid grades in statistics
+//    assertTrue(statisticsService.calculateMean() >= 0);
+//}
+
+//    @Test
+//    void testGetSubjectAveragesWithNonExistentSubject() {
+//        assertNull(statisticsService.getSubjectAverages().get("NonExistentSubject"));
+//    }
+
 }
