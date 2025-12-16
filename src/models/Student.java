@@ -1,179 +1,29 @@
-// Student.java
-// Base class representing a student with personal info, grades, and subjects
-//  Contains core student management functionality
-
 package models;
 
 import services.GradeService;
+import java.util.List;
 
-public class Student {
-    protected String studentID;
-    protected String name;
-    protected int age;
-    protected String email;
-    protected String phone;
-    protected String status;
+public interface Student {
+    void addGrade(double grade);
+    double calculateAverage(GradeService gradeService);
+    boolean isPassing(GradeService gradeService);
+    boolean isHonorsEligible(services.GradeService gradeService);
+    int getPassingGrade();
+    int getGradeCount();
+    void enrollSubject(Subject subject);
+    String getEnrolledSubjectsString();
 
-    protected int passingGrade;
-    protected boolean honorsEligible;
+    String getStudentID();
+    String getName();
+    String getEmail();
+    int getAge();
+    String getPhone();
+    String getStatus();
+    List<Subject> getEnrolledSubjects();
 
-    protected double[] grades;
-    protected int gradeCount;
-
-    protected Subject[] enrolledSubjects;
-    protected int subjectCount;
-
-//    Tracks total students for ID generation
-    private static int studentCounter = 0;
-
-
-    public Student(String name, int age, String email, String phone, int passingGrade, boolean honorsEligible) {
-        this.name = name;
-        this.age = age;
-        this.email = email;
-        this.phone = phone;
-        this.passingGrade = passingGrade;
-        this.honorsEligible = honorsEligible;
-
-        studentCounter++;
-        this.studentID = String.format("STU%03d", studentCounter);
-        this.status = "Active";
-
-        this.grades = new double[10];
-        this.gradeCount = 0;
-
-        this.enrolledSubjects = new Subject[10];
-        this.subjectCount = 0;
-    }
-
-//      Adds a grade to the student's record.
-
-    public void addGrade(double grade) {
-        if (grade < 0 || grade > 100) {
-            System.out.println("Invalid grade, must be between 0 and 100");
-            return;
-        }
-        if (gradeCount < grades.length) {
-            grades[gradeCount] = grade;
-            gradeCount++;
-            System.out.println("Grade added successfully");
-        } else {
-            System.out.println("Cannot add more grades, limit reached");
-        }
-    }
-
-//      Calculates the average grade for the student.
-public double calculateAverage(GradeService gradeService) {
-    double total = 0.0;
-    int count = 0;
-    Grade[] grades = gradeService.getGrades();
-    int gradeCount = gradeService.getGradeCount();
-    for (int i = 0; i < gradeCount; i++) {
-        Grade g = grades[i];
-        if (g != null && g.getStudentID().equalsIgnoreCase(this.getStudentID())) {
-            total += g.getValue();
-            count++;
-        }
-    }
-    return count > 0 ? total / count : 0.0;
-}
-
-
-    public boolean isPassing(GradeService gradeService) {
-        return calculateAverage(gradeService) >= passingGrade;
-    }
-
-
-    public boolean isHonorsEligible() {
-        return honorsEligible;
-    }
-
-
-    public int getPassingGrade() {
-        return passingGrade;
-    }
-
-
-    public int getGradeCount() {
-        return gradeCount;
-    }
-
-
-    public void enrollSubject(Subject subject) {
-        if (subjectCount < enrolledSubjects.length) {
-            enrolledSubjects[subjectCount++] = subject;
-        }
-    }
-
-//     Returns a comma-separated string of enrolled subjects.
-    public String getEnrolledSubjectsString() {
-        if (subjectCount == 0) return "-";
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < subjectCount; i++) {
-            sb.append(enrolledSubjects[i].getSubjectName());
-            if (i < subjectCount - 1) sb.append(", ");
-        }
-        return sb.toString();
-    }
-
-
-
-    // GETTERS
-    public String getStudentID() {
-        return studentID;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-
-    public String getEmail() {
-        return email;
-    }
-
-
-    public int getAge() {
-        return age;
-    }
-
-
-    public String getPhone() {
-        return phone;
-    }
-
-
-    public String getStatus() {
-        return status;
-    }
-
-    public Subject[] getEnrolledSubjects() {
-        return enrolledSubjects;
-    }
-
-    // SETTERS
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-
-    public void setAge(int age) {
-        this.age = age;
-    }
-
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
+    void setName(String name);
+    void setAge(int age);
+    void setEmail(String email);
+    void setPhone(String phone);
+    void setStatus(String status);
 }
