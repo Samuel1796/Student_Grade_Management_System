@@ -2,13 +2,13 @@ package services;
 
 import java.io.*;
 import java.util.Date;
-import models.Grade;
-import models.Student;
-import models.HonorsStudent;
+
+import models.*;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
-import models.Subject;
+
 import exceptions.*;
 
 /**
@@ -33,7 +33,7 @@ public class GradeService {
      * @return true if the grade was recorded successfully.
      * @throws AppExceptions if the grade database is full.
      */
-    public boolean recordGrade(Grade grade) {
+    public boolean recordGrade(Grade grade, StudentService studentService) {
         if (gradeCount >= grades.length) {
             throw new AppExceptions("Grade database full!");
         }
@@ -41,7 +41,37 @@ public class GradeService {
             throw new InvalidGradeException(grade.getValue());
         }
         grades[gradeCount++] = grade;
+    
+        // Ensure the subject is enrolled for the student
+        Student student = studentService.findStudentById(grade.getStudentID());
+        Subject subject = studentService.findSubjectByNameAndType(grade.getSubjectName(), grade.getSubjectType());
+        if (student != null) {
+            if (subject == null) {
+                // Create a new subject instance if not found
+                if (grade.getSubjectType().equalsIgnoreCase("Core Subject")) {
+                    subject = new CoreSubject(grade.getSubjectName(), grade.getSubjectType());
+                } else if (grade.getSubjectType().equalsIgnoreCase("Elective Subject")) {
+                    subject = new ElectiveSubject(grade.getSubjectName(), grade.getSubjectType());
+                }
+            }
+            boolean alreadyEnrolled = student.getEnrolledSubjects().stream()
+                .anyMatch(s -> s.getSubjectName().equalsIgnoreCase(grade.getSubjectName())
+                            && s.getSubjectType().equalsIgnoreCase(grade.getSubjectType()));
+            if (!alreadyEnrolled && subject != null) {
+                student.enrollSubject(subject);
+            }
+        }
         return true;
+    }
+
+    /**
+     * Optionally, keep the old method for backward compatibility
+     * public boolean recordGrade(Grade grade) {
+     *     throw new UnsupportedOperationException("Use recordGrade(Grade grade, StudentService studentService) instead.");
+     * }
+     */
+    public boolean recordGrade(Grade grade) {
+        throw new UnsupportedOperationException("Use recordGrade(Grade grade, StudentService studentService) instead.");
     }
 
     /**

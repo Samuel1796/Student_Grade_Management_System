@@ -14,7 +14,7 @@ public class StatisticsService {
 
     private final Grade[] grades;
     private final int gradeCount;
-    private final Student[] students;
+    private final Collection<Student> students;
     private final int studentCount;
     private final GradeService gradeService;
 
@@ -26,7 +26,7 @@ public class StatisticsService {
      * @param studentCount Number of students.
      * @param gradeService GradeService instance for grade operations.
      */
-    public StatisticsService(Grade[] grades, int gradeCount, Student[] students, int studentCount, GradeService gradeService) {
+    public StatisticsService(Grade[] grades, int gradeCount, Collection<Student> students, int studentCount, GradeService gradeService) {
         this.grades = grades;
         this.gradeCount = gradeCount;
         this.students = students;
@@ -208,8 +208,7 @@ public class StatisticsService {
     public Map<String, Double> getStudentTypeAverages() {
         double regularSum = 0.0, honorsSum = 0.0;
         int regularCount = 0, honorsCount = 0;
-        for (int i = 0; i < studentCount; i++) {
-            Student s = students[i];
+        for (Student s : students) {
             if (s instanceof RegularStudent) {
                 double avg = s.calculateAverage(gradeService);
                 regularSum += avg;

@@ -1,19 +1,31 @@
-// src/CoreSubject.java
-
-// Represents a core subject with specific attributes and methods
-//  Inherits from Subject class
 package models;
 
-public class CoreSubject extends Subject {
+public class CoreSubject implements Subject {
+    private String subjectName;
+    private String subjectCode;
+
     public CoreSubject(String name, String code) {
-        super(name, code);
+        this.subjectName = name;
+        this.subjectCode = code;
     }
 
+    @Override
     public String getSubjectType() {
         return "Core Subject";
     }
 
+    @Override
     public void displaySubjectDetails() {
         System.out.println(getSubjectType());
+    }
+
+    @Override
+    public String getSubjectName() {
+        return subjectName;
+    }
+
+    @Override
+    public String getSubjectCode() {
+        return subjectCode;
     }
 }
