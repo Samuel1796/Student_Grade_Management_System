@@ -6,6 +6,8 @@ import exceptions.*;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class MainMenuHandler {
@@ -14,6 +16,11 @@ public class MainMenuHandler {
     private final MenuService menuService;
     private final StatisticsService statisticsService;
     private final Scanner sc;
+    private BatchReportTaskManager batchManager;
+
+    public BatchReportTaskManager getBatchManager() {
+        return batchManager;
+    }
 
     public MainMenuHandler(StudentService studentService, GradeService gradeService, MenuService menuService, StatisticsService statisticsService, Scanner sc) {
         this.studentService = studentService;
@@ -25,7 +32,11 @@ public class MainMenuHandler {
 
     public boolean handleMenu(int choice) {
         try {
+
+
             switch (choice) {
+
+
                 case 1:
                     // Add Student
                     boolean studentAdded = false;
@@ -413,8 +424,79 @@ public class MainMenuHandler {
 
 //                    GENERATE BATCH REPORT
                 case 11:
-                        break;
+                    System.out.println("GENERATE BATCH REPORTS");
+                    System.out.println("Report Scope:");
+                    System.out.println("1. All Students");
+                    System.out.println("2. By Student Type (Regular/Honors)");
+                    System.out.println("3. By Grade Range");
+                    System.out.println("4. Custom Selection");
+                    int scope = 0;
+                    while (scope < 1 || scope > 4) {
+                        System.out.print("Select scope (1-4): ");
+                        try { scope = Integer.parseInt(sc.nextLine()); } catch (NumberFormatException ignored) {}
+                    }
 
+                    List<Student> batchStudents = new ArrayList<>();
+                    if (scope == 1) {
+                        batchStudents.addAll(studentService.getStudents());
+                    } else if (scope == 2) {
+                        System.out.print("Type (1: Regular, 2: Honors): ");
+                        int type = Integer.parseInt(sc.nextLine());
+                        for (Student s : studentService.getStudents()) {
+                            if ((type == 1 && s instanceof RegularStudent) ||
+                                    (type == 2 && s instanceof HonorsStudent)) {
+                                batchStudents.add(s);
+                            }
+                        }
+                    } else if (scope == 3) {
+                        System.out.print("Min grade: ");
+                        int min = Integer.parseInt(sc.nextLine());
+                        System.out.print("Max grade: ");
+                        int max = Integer.parseInt(sc.nextLine());
+                        for (Student s : studentService.getStudents()) {
+                            double avg = s.calculateAverage(gradeService);
+                            if (avg >= min && avg <= max) batchStudents.add(s);
+                        }
+                    } else if (scope == 4) {
+                        System.out.print("Enter comma-separated Student IDs: ");
+                        String[] ids = sc.nextLine().split(",");
+                        for (String id : ids) {
+                            try {
+                                batchStudents.add(studentService.findStudentById(id.trim()));
+                            } catch (Exception ignored) {}
+                        }
+                    }
+
+                    System.out.println("Report Format:");
+                    System.out.println("1. PDF summary");
+                    System.out.println("2. Detailed Text");
+                    System.out.println("3. Excel Spreadsheet");
+                    System.out.println("4. All Formats");
+                    int format = 0;
+                    while (format < 1 || format > 4) {
+                        System.out.print("Select format (1-4): ");
+                        try { format = Integer.parseInt(sc.nextLine()); } catch (NumberFormatException ignored) {}
+                    }
+
+                    int processors = Runtime.getRuntime().availableProcessors();
+                    System.out.println("Available Processors: " + processors);
+                    System.out.println("Recommended Threads: 4-" + processors);
+                    System.out.print("Enter number of threads (1-" + processors + "): ");
+                    int threads = 1;
+                    try {
+                        threads = Integer.parseInt(sc.nextLine());
+                        if (threads < 1) threads = 1;
+                        if (threads > processors) threads = processors;
+                    } catch (NumberFormatException ignored) {}
+
+                    String batchDir = "./reports/batch_" + new java.text.SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date()) + "/";
+                    new java.io.File(batchDir).mkdirs();
+
+                    BatchReportTaskManager manager = new BatchReportTaskManager(
+                            batchStudents, gradeService, format, batchDir, threads
+                    );
+                    manager.startBatchExport();
+                    break;
 
 
 //
@@ -509,10 +591,14 @@ public class MainMenuHandler {
                 default:
                     System.out.println("Invalid menu choice.");
                     break;
+
+
             }
         } catch (Exception e) {
             System.out.println("An error occurred: " + e.getMessage());
         }
+
+
         return true;
     }
 }

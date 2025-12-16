@@ -4,12 +4,18 @@ package services;
  * Handles menu display and navigation.
  */
 public class MenuService {
+
+
     public void displayMainMenu() {
+
+
         System.out.println("+===================================================+");
         System.out.println("| STUDENT GRADE MANAGEMENT - MAIN MENU             |");
         System.out.println("|          [Advanced Edition v3.0]                 |");
         System.out.println("+===================================================+");
         System.out.println();
+
+
 
         System.out.println("STUDENT MANAGEMENT");
         System.out.println("1. Add Student ");

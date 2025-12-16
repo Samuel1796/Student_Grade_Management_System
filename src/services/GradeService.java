@@ -3,6 +3,10 @@ package services;
 import java.io.*;
 import java.util.*;
 
+import com.itextpdf.text.Document;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfWriter;
 import models.*;
 
 import java.text.SimpleDateFormat;
@@ -10,7 +14,8 @@ import java.text.SimpleDateFormat;
 import exceptions.*;
 import utilities.FileIOUtils;
 import java.nio.file.Paths;
-
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 /**
  * Service class for managing grades, including recording, reporting, exporting, and importing grades.
  */
@@ -41,7 +46,7 @@ public class GradeService {
             throw new InvalidGradeException(grade.getValue());
         }
         grades[gradeCount++] = grade;
-    
+
         // Ensure the subject is enrolled for the student
         Student student = studentService.findStudentById(grade.getStudentID());
         Subject subject = studentService.findSubjectByNameAndType(grade.getSubjectName(), grade.getSubjectType());
@@ -548,4 +553,63 @@ public class GradeService {
             recordGrade(g);
         }
     }
+
+
+    public void exportGradeReportPDF(Student student, String filename) throws Exception {
+        Document document = new Document();
+        PdfWriter.getInstance(document, new FileOutputStream(filename + ".pdf"));
+        document.open();
+        document.add(new Paragraph("Grade Report for " + student.getName()));
+        PdfPTable table = new PdfPTable(5);
+        table.addCell("Grade ID");
+        table.addCell("Subject");
+        table.addCell("Type");
+        table.addCell("Value");
+        table.addCell("Date");
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("MM/dd/yyyy");
+        for (Grade g : getGrades()) {
+            if (g != null && g.getStudentID().equalsIgnoreCase(student.getStudentID())) {
+                table.addCell(g.getGradeID());
+                table.addCell(g.getSubjectName());
+                table.addCell(g.getSubjectType());
+                table.addCell(String.valueOf(g.getValue()));
+                table.addCell(sdf.format(g.getDate()));
+            }
+        }
+        document.add(table);
+        document.close();
+    }
+
+
+
+    public void exportGradeReportExcel(Student student, String filename) throws Exception {
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Grades");
+        Row header = sheet.createRow(0);
+        header.createCell(0).setCellValue("Grade ID");
+        header.createCell(1).setCellValue("Subject");
+        header.createCell(2).setCellValue("Type");
+        header.createCell(3).setCellValue("Value");
+        header.createCell(4).setCellValue("Date");
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("MM/dd/yyyy");
+        int rowIdx = 1;
+        for (Grade g : getGrades()) {
+            if (g != null && g.getStudentID().equalsIgnoreCase(student.getStudentID())) {
+                Row row = sheet.createRow(rowIdx++);
+                row.createCell(0).setCellValue(g.getGradeID());
+                row.createCell(1).setCellValue(g.getSubjectName());
+                row.createCell(2).setCellValue(g.getSubjectType());
+                row.createCell(3).setCellValue(g.getValue());
+                row.createCell(4).setCellValue(sdf.format(g.getDate()));
+            }
+        }
+        try (FileOutputStream fos = new FileOutputStream(filename + ".xlsx")) {
+            workbook.write(fos);
+        }
+        workbook.close();
+    }
+
+
+
 }
+

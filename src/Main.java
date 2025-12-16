@@ -43,13 +43,21 @@ public class Main {
         boolean running = true;
 
         MainMenuHandler menuHandler = new MainMenuHandler(studentService, gradeService, menuService, statisticsService, sc);
+        BatchReportTaskManager batchManager;
 
         while (running) {
+            // Show background task status before menu
+            if (menuHandler.getBatchManager() != null && menuHandler.getBatchManager().isRunning()) {
+                System.out.println("Background Tasks: " + menuHandler.getBatchManager().getActiveTasks() + " active");
+            } else {
+                System.out.println("No background tasks are running.");
+            }
+
             menuService.displayMainMenu();
+
             int choice = sc.nextInt();
             sc.nextLine();
             running = menuHandler.handleMenu(choice);
         }
     }
 }
-
