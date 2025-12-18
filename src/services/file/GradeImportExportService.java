@@ -392,33 +392,67 @@ public class GradeImportExportService {
     }
     
     /**
-     * Exports grade report to PDF format.
+     * Exports a formatted grade report to PDF format.
+     * Mirrors the detailed text report content with structured sections and a grade table.
      */
     public void exportGradeReportPDF(Student student, String filename) throws Exception {
         Document document = new Document();
         PdfWriter.getInstance(document, new FileOutputStream(filename + ".pdf"));
         document.open();
-        document.add(new Paragraph("Grade Report for " + student.getName()));
+
+        // Header
+        document.add(new Paragraph("GRADE REPORT"));
+        document.add(new Paragraph("============"));
+        document.add(new Paragraph("\n"));
+
+        // Collect grades for this student
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
+        Grade[] allGrades = gradeService.getGrades();
+        int gradeCount = gradeService.getGradeCount();
+        java.util.List<Grade> studentGrades = new java.util.ArrayList<>();
+        double total = 0.0;
+        for (int i = 0; i < gradeCount; i++) {
+            Grade g = allGrades[i];
+            if (g != null && g.getStudentID().equalsIgnoreCase(student.getStudentID())) {
+                studentGrades.add(g);
+                total += g.getValue();
+            }
+        }
+        double avg = studentGrades.isEmpty() ? 0.0 : total / studentGrades.size();
+
+        // Summary section
+        document.add(new Paragraph(String.format("Student: %s - %s",
+                student.getStudentID(), student.getName())));
+        document.add(new Paragraph(String.format("Type: %s",
+                (student instanceof HonorsStudent) ? "Honors Student" : "Regular Student")));
+        document.add(new Paragraph(String.format("Total Grades: %d", studentGrades.size())));
+        document.add(new Paragraph(String.format("Average: %.1f%%", avg)));
+        document.add(new Paragraph(String.format("Passing Grade: %d%%", student.getPassingGrade())));
+        document.add(new Paragraph(String.format("Status: %s",
+                student.isPassing(gradeService) ? "PASSING" : "FAILING")));
+        document.add(new Paragraph("\n"));
+
+        // Grade history table
+        document.add(new Paragraph("GRADE HISTORY"));
+        document.add(new Paragraph("------------"));
+        document.add(new Paragraph("\n"));
+
         PdfPTable table = new PdfPTable(5);
         table.addCell("Grade ID");
+        table.addCell("Date");
         table.addCell("Subject");
         table.addCell("Type");
         table.addCell("Value");
-        table.addCell("Date");
-        SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy");
-        Grade[] grades = gradeService.getGrades();
-        int gradeCount = gradeService.getGradeCount();
-        for (int i = 0; i < gradeCount; i++) {
-            Grade g = grades[i];
-            if (g != null && g.getStudentID().equalsIgnoreCase(student.getStudentID())) {
-                table.addCell(g.getGradeID());
-                table.addCell(g.getSubjectName());
-                table.addCell(g.getSubjectType());
-                table.addCell(String.valueOf(g.getValue()));
-                table.addCell(sdf.format(g.getDate()));
-            }
+
+        for (Grade g : studentGrades) {
+            table.addCell(g.getGradeID());
+            table.addCell(sdf.format(g.getDate()));
+            table.addCell(g.getSubjectName());
+            table.addCell(g.getSubjectType());
+            table.addCell(String.format("%.1f", g.getValue()));
         }
         document.add(table);
+
         document.close();
     }
     

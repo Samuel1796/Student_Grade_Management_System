@@ -5,7 +5,7 @@ import services.file.BatchReportTaskManager;
 import services.menu.MenuService;
 import services.menu.MainMenuHandler;
 import services.analytics.StatisticsService;
-import exceptions.*;
+import services.system.AuditTrailService;
 import java.io.IOException;
 import java.util.*;
 
@@ -21,6 +21,14 @@ public class Main {
         StudentService studentService = new StudentService();
         GradeService gradeService = new GradeService(500);
         MenuService menuService = new MenuService();
+        AuditTrailService auditTrailService = new AuditTrailService();
+        // Record application start in audit trail
+        auditTrailService.logOperation(
+                "APP_START",
+                "Application started",
+                0,
+                true,
+                "Version=2.0.0");
 
         // Initialize sample students and grades
         Collection<Student> students = studentService.getStudents();
@@ -46,7 +54,7 @@ public class Main {
         Scanner sc = new Scanner(System.in);
         boolean running = true;
 
-        MainMenuHandler menuHandler = new MainMenuHandler(studentService, gradeService, menuService, statisticsService, sc);
+        MainMenuHandler menuHandler = new MainMenuHandler(studentService, gradeService, menuService, statisticsService, sc, auditTrailService);
         List<Student> studentList = new ArrayList<>(studentService.getStudents());
         int format = 1; // 1: CSV, 2: JSON, 3: Binary, 4: All formats
         String outputDir = "./reports/batch_2025-12-17/";
@@ -63,5 +71,14 @@ public class Main {
             sc.nextLine();
             running = menuHandler.handleMenu(choice);
         }
+
+        // Record graceful shutdown and flush audit logs
+        auditTrailService.logOperation(
+                "APP_EXIT",
+                "Application exited",
+                0,
+                true,
+                "Graceful=true");
+        auditTrailService.shutdown();
     }
 }

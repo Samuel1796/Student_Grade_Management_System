@@ -3,6 +3,7 @@ package services.menu;
 import models.*;
 import exceptions.*;
 import services.system.TaskScheduler;
+import services.system.AuditTrailService;
 import utilities.FileIOUtils;
 import utilities.ValidationUtils;
 import services.student.StudentService;
@@ -27,30 +28,32 @@ public class MainMenuHandler {
     private final MenuService menuService;
     private final StatisticsService statisticsService;
     private final Scanner sc;
+    private final AuditTrailService auditTrailService;
     private BatchReportTaskManager batchManager;
 
     public BatchReportTaskManager getBatchManager() {
         return batchManager;
     }
 
-    public MainMenuHandler(StudentService studentService, GradeService gradeService, MenuService menuService, StatisticsService statisticsService, Scanner sc) {
+    public MainMenuHandler(StudentService studentService, GradeService gradeService, MenuService menuService,
+                           StatisticsService statisticsService, Scanner sc, AuditTrailService auditTrailService) {
         this.studentService = studentService;
         this.gradeService = gradeService;
         this.gradeImportExportService = new GradeImportExportService(gradeService);
         this.menuService = menuService;
         this.statisticsService = statisticsService;
         this.sc = sc;
+        this.auditTrailService = auditTrailService;
     }
 
     public boolean handleMenu(int choice) {
         try {
-
-
             switch (choice) {
 
 
                 case 1:
                     // Add Student
+                    long addStart = System.currentTimeMillis();
                     boolean studentAdded = false;
                     while (!studentAdded) {
                         try {
@@ -120,6 +123,12 @@ public class MainMenuHandler {
                                     : new RegularStudent(name, age, email, phone);
                             studentService.addStudent(newStudent);
                             System.out.println("Student added successfully!");
+                            auditTrailService.logOperation(
+                                    "ADD_STUDENT",
+                                    "Add student via menu",
+                                    System.currentTimeMillis() - addStart,
+                                    true,
+                                    "ID=" + newStudent.getStudentID() + ", Name=" + newStudent.getName());
                             studentAdded = true;
                         } catch (DuplicateStudentException e) {
                             System.out.print("Duplicate student detected. Try again? (Y/N): ");
@@ -134,10 +143,17 @@ public class MainMenuHandler {
                 case 2:
                     // View Students
                     studentService.viewAllStudents(gradeService);
+                    auditTrailService.logOperation(
+                            "VIEW_STUDENTS",
+                            "View all students",
+                            0,
+                            true,
+                            "Total=" + studentService.getStudentCount());
                     break;
 
                 case 3:
                     // Record Grade
+                    long recordStart = System.currentTimeMillis();
                     while (true) {
                         try {
                             System.out.print("Enter Student ID: ");
@@ -243,6 +259,15 @@ public class MainMenuHandler {
                                     Grade grade = new Grade(nextGradeID, foundStudent.getStudentID(), subject.getSubjectName(), subject.getSubjectType(), gradeValue, date);
                                     gradeService.recordGrade(grade, studentService); // <-- FIXED: Pass studentService here!
                                     System.out.printf("Grade recorded successfully! Grade ID: %s%n", nextGradeID);
+                                    auditTrailService.logOperation(
+                                            "RECORD_GRADE",
+                                            "Record grade via menu",
+                                            System.currentTimeMillis() - recordStart,
+                                            true,
+                                            "StudentID=" + foundStudent.getStudentID() +
+                                                    ", Subject=" + subject.getSubjectName() +
+                                                    ", Type=" + subject.getSubjectType() +
+                                                    ", Grade=" + gradeValue);
                                 }
                             } else {
                                 System.out.println("Grade recording canceled.");
@@ -260,6 +285,7 @@ public class MainMenuHandler {
 
                 case 4:
                     // View Grade Report
+                    long reportStart = System.currentTimeMillis();
                     boolean found = false;
                     while (!found) {
                         System.out.print("Enter Student ID: ");
@@ -268,6 +294,12 @@ public class MainMenuHandler {
                             Student studentForReport = studentService.findStudentById(idForReport);
                             gradeService.viewGradeReport(studentForReport);
                             found = true;
+                            auditTrailService.logOperation(
+                                    "VIEW_GRADE_REPORT",
+                                    "View grade report via menu",
+                                    System.currentTimeMillis() - reportStart,
+                                    true,
+                                    "StudentID=" + studentForReport.getStudentID());
                         } catch (StudentNotFoundException e) {
                             System.out.println("ERROR: " + e.getMessage());
                             System.out.print("Student not found. Try again? (Y/N): ");
@@ -281,6 +313,7 @@ public class MainMenuHandler {
 
                 case 5:
                     // Export Grade Report
+                    long exportStart = System.currentTimeMillis();
                     System.out.println("EXPORT GRADE REPORT (Multi-Format)");
                     System.out.println("_____________________________");
                     System.out.println();
@@ -351,9 +384,23 @@ System.out.println("ERROR: " + e.getMessage());
                             gradeImportExportService.exportGradesBinary(filename);
                         }
                         System.out.println("Report exported successfully!");
+                        auditTrailService.logOperation(
+                                "EXPORT_REPORT",
+                                "Export grade report via menu",
+                                System.currentTimeMillis() - exportStart,
+                                true,
+                                "StudentID=" + exportStudent.getStudentID() +
+                                        ", Format=" + exportFormat +
+                                        ", Type=" + reportType +
+                                        ", File=" + filename);
                     } catch (Exception e) {
                         System.out.println("Export failed: " + e.getMessage());
-//                        e.printStackTrace();
+                        auditTrailService.logOperation(
+                                "EXPORT_REPORT",
+                                "Export grade report via menu",
+                                System.currentTimeMillis() - exportStart,
+                                false,
+                                "Error=" + e.getMessage());
                     }
                     break;
 
@@ -372,6 +419,7 @@ System.out.println("ERROR: " + e.getMessage());
                     int duplicateCount = 0;
                     List<String> errorMessages = new ArrayList<>();
 
+                    long importStart = System.currentTimeMillis();
                     try {
                         List<Student> importedStudents = null;
                         switch (importFormat) {
@@ -431,11 +479,31 @@ System.out.println("ERROR: " + e.getMessage());
                             }
                         }
                         System.out.println("Import completed!");
+                        auditTrailService.logOperation(
+                                "IMPORT_STUDENTS",
+                                "Import students via menu",
+                                System.currentTimeMillis() - importStart,
+                                true,
+                                "Format=" + importFormat +
+                                        ", File=" + importFilename +
+                                        ", Imported=" + importedCount +
+                                        ", Duplicates=" + duplicateCount);
                     } catch (IOException e) {
                         System.out.println("File not found or could not be read: " + e.getMessage());
+                        auditTrailService.logOperation(
+                                "IMPORT_STUDENTS",
+                                "Import students via menu",
+                                System.currentTimeMillis() - importStart,
+                                false,
+                                "IOError=" + e.getMessage());
                     } catch (Exception e) {
                         System.out.println("Import failed: " + e.getMessage());
-                        e.printStackTrace();
+                        auditTrailService.logOperation(
+                                "IMPORT_STUDENTS",
+                                "Import students via menu",
+                                System.currentTimeMillis() - importStart,
+                                false,
+                                "Error=" + e.getMessage());
                     }
                     break;
 
@@ -479,14 +547,26 @@ System.out.println("ERROR: " + e.getMessage());
                     
                     // Execute bulk import with comprehensive error handling
                     // bulkImportGrades() handles file parsing, validation, and reporting
+                    long gradeImportStart = System.currentTimeMillis();
                     try {
                         gradeImportExportService.bulkImportGrades(gradeImportFilename, formatStr, studentService);
                     } catch (Exception e) {
                         // Catch-all exception handler: ensures menu doesn't crash
                         // Print error message and stack trace for debugging
                         System.out.println("Grade import failed: " + e.getMessage());
-//                        e.printStackTrace();
+                        auditTrailService.logOperation(
+                                "IMPORT_GRADES",
+                                "Bulk import grades via menu",
+                                System.currentTimeMillis() - gradeImportStart,
+                                false,
+                                "File=" + gradeImportFilename + "." + formatStr + ", Error=" + e.getMessage());
                     }
+                    auditTrailService.logOperation(
+                            "IMPORT_GRADES",
+                            "Bulk import grades via menu",
+                            System.currentTimeMillis() - gradeImportStart,
+                            true,
+                            "File=" + gradeImportFilename + "." + formatStr);
                     break;
 
 
@@ -513,6 +593,12 @@ System.out.println("ERROR: " + e.getMessage());
                     }
                     if (!foundGPA || gpaStudent == null) break;
                     statisticsService.printStudentGPAReport(gpaStudent);
+                    auditTrailService.logOperation(
+                            "VIEW_GPA",
+                            "View student GPA report",
+                            0,
+                            true,
+                            "StudentID=" + gpaStudent.getStudentID());
                     break;
 
 //                    VIEW CLASS STATS
@@ -525,7 +611,15 @@ System.out.println("ERROR: " + e.getMessage());
                             studentService.getStudentCount(),
                             gradeService
                     );
+                    long statsStart = System.currentTimeMillis();
                     statsService.printStatisticsReport();
+                    auditTrailService.logOperation(
+                            "VIEW_CLASS_STATS",
+                            "View class statistics",
+                            System.currentTimeMillis() - statsStart,
+                            true,
+                            "Students=" + studentService.getStudentCount() +
+                                    ", Grades=" + gradeService.getGradeCount());
                     break;
 
 
@@ -538,6 +632,7 @@ System.out.println("ERROR: " + e.getMessage());
                      * - Live grade distribution, averages, and top performers
                      */
                     // Create StatisticsDashboard using current GradeService data and student collection
+                    long dashboardSessionStart = System.currentTimeMillis();
                     StatisticsDashboard dashboard = new StatisticsDashboard(
                         gradeService,
                         studentService.getStudents(),
@@ -548,6 +643,13 @@ System.out.println("ERROR: " + e.getMessage());
                     menuService.setStatisticsDashboard(dashboard);
                     
                     dashboard.start();
+                    auditTrailService.logOperation(
+                            "DASHBOARD_START",
+                            "Start real-time statistics dashboard",
+                            0,
+                            true,
+                            "Students=" + studentService.getStudentCount() +
+                                    ", Grades=" + gradeService.getGradeCount());
                     
                     // Interactive dashboard loop
                     Scanner dashboardScanner = new Scanner(System.in);
@@ -562,15 +664,33 @@ System.out.println("ERROR: " + e.getMessage());
                             case "R":
                                 // Manual refresh (forces immediate recalculation)
                                 dashboard.refresh();
+                                auditTrailService.logOperation(
+                                        "DASHBOARD_REFRESH",
+                                        "Manual dashboard refresh",
+                                        0,
+                                        true,
+                                        "");
                                 break;
                             case "P":
                                 // Pause or resume background auto-refresh
                                 dashboard.togglePause();
+                                auditTrailService.logOperation(
+                                        "DASHBOARD_TOGGLE_PAUSE",
+                                        "Toggle dashboard pause/resume",
+                                        0,
+                                        true,
+                                        "Status=" + dashboard.getThreadStatus());
                                 break;
                             case "Q":
                                 dashboardRunning = false;
                                 dashboard.stop();
                                 menuService.setStatisticsDashboard(null);
+                                auditTrailService.logOperation(
+                                        "DASHBOARD_STOP",
+                                        "Stop real-time statistics dashboard",
+                                        System.currentTimeMillis() - dashboardSessionStart,
+                                        true,
+                                        "");
                                 break;
                             default:
                                 // Any other key just re-draws the dashboard
@@ -705,7 +825,14 @@ System.out.println("ERROR: " + e.getMessage());
                     BatchReportTaskManager manager = new BatchReportTaskManager(
                             batchStudents, gradeImportExportService, format, batchDir, threads
                     );
+                    long batchStart = System.currentTimeMillis();
                     manager.startBatchExport(); // Blocks until all reports are generated
+                    auditTrailService.logOperation(
+                            "BATCH_EXPORT",
+                            "Batch export via menu",
+                            System.currentTimeMillis() - batchStart,
+                            true,
+                            "Scope=" + scope + ", Format=" + format + ", Students=" + batchStudents.size());
                     break;
 
 
@@ -722,6 +849,7 @@ System.out.println("ERROR: " + e.getMessage());
                     int searchOption = sc.nextInt();
                     sc.nextLine();
 
+                    long basicSearchStart = System.currentTimeMillis();
                     Student[] searchResults = new Student[0];
 
                     switch (searchOption) {
@@ -779,6 +907,12 @@ System.out.println("ERROR: " + e.getMessage());
                                     s.getPhone(),
                                     s.calculateAverage(gradeService));
                         }
+                        auditTrailService.logOperation(
+                                "SEARCH_STUDENTS",
+                                "Search students via basic search menu",
+                                System.currentTimeMillis() - basicSearchStart,
+                                true,
+                                "Option=" + searchOption + ", Results=" + searchResults.length);
                     }
                     break;
 
@@ -794,6 +928,7 @@ System.out.println("ERROR: " + e.getMessage());
                      * - Name patterns
                      * - Custom regex patterns
                      */
+                    long patternSearchStart = System.currentTimeMillis();
                     PatternSearchService patternSearch = new PatternSearchService(studentService.getStudents());
                     
                     System.out.println("PATTERN-BASED SEARCH");
@@ -868,6 +1003,20 @@ System.out.println("ERROR: " + e.getMessage());
                         }
                     } else if (patternSearchResults != null && patternSearchResults.containsKey("error")) {
                         System.out.println("Error: " + patternSearchResults.get("error"));
+                        auditTrailService.logOperation(
+                                "PATTERN_SEARCH",
+                                "Pattern-based search via menu",
+                                System.currentTimeMillis() - patternSearchStart,
+                                false,
+                                "Option=" + patternOption + ", Error=" + patternSearchResults.get("error"));
+                    }
+                    if (patternSearchResults != null && !patternSearchResults.containsKey("error")) {
+                        auditTrailService.logOperation(
+                                "PATTERN_SEARCH",
+                                "Pattern-based search via menu",
+                                System.currentTimeMillis() - patternSearchStart,
+                                true,
+                                "Option=" + patternOption);
                     }
                     break;
 
@@ -887,6 +1036,7 @@ System.out.println("ERROR: " + e.getMessage());
                      * - Weekly batch report generation
                      * - Daily database backup
                      */
+                    long schedulerStart = System.currentTimeMillis();
                     TaskScheduler taskScheduler = new TaskScheduler(
                         statisticsService, gradeService, studentService.getStudents()
                     );
@@ -899,6 +1049,12 @@ System.out.println("ERROR: " + e.getMessage());
                     
                     if (taskOption == 1) {
                         taskScheduler.displayActiveTasks();
+                        auditTrailService.logOperation(
+                                "SCHEDULER_VIEW",
+                                "View active scheduled tasks",
+                                System.currentTimeMillis() - schedulerStart,
+                                true,
+                                "");
                     } else if (taskOption == 2) {
                         System.out.println("Task Types:");
                         System.out.println("1. GPA Recalculation");
@@ -949,12 +1105,28 @@ System.out.println("ERROR: " + e.getMessage());
                         
                         taskScheduler.scheduleTask(taskId, taskName, type, schedType, scheduleValue, scheduleTime);
                         System.out.println("Task scheduled successfully!");
+                        auditTrailService.logOperation(
+                                "SCHEDULER_SCHEDULE",
+                                "Schedule automated task via menu",
+                                System.currentTimeMillis() - schedulerStart,
+                                true,
+                                "TaskId=" + taskId + ", Name=" + taskName +
+                                        ", Type=" + type +
+                                        ", ScheduleType=" + schedType +
+                                        ", Value=" + scheduleValue +
+                                        ", Time=" + scheduleTime);
                     }
                     break;
 
 //                    VIEW SYSTEM PERFORMANCE
                 case 16:
                     System.out.println("System Performance metrics are displayed in the Real-Time Dashboard (Option 10).");
+                    auditTrailService.logOperation(
+                            "VIEW_SYSTEM_PERFORMANCE",
+                            "View system performance help message",
+                            0,
+                            true,
+                            "");
                     break;
 
 //                    CACHE MANAGEMENT
@@ -970,23 +1142,43 @@ System.out.println("ERROR: " + e.getMessage());
                     // Note: Cache would be initialized elsewhere and passed here
                     System.out.println("Cache Management - Implementation requires cache instance initialization.");
                     System.out.println("Cache features: LRU eviction, statistics, warming, invalidation");
+                    auditTrailService.logOperation(
+                            "CACHE_MENU",
+                            "Open cache management menu (not fully implemented)",
+                            0,
+                            true,
+                            "");
                     break;
 
 //                    AUDIT TRAIL VIEWER
                 case 18:
                     /**
                      * Audit Trail Viewer (US-9)
-                     * 
-                     * Views and searches audit logs:
-                     * - Recent entries
-                     * - Filter by operation type
-                     * - Filter by thread ID
-                     * - Search by date range
-                     * - View statistics
+                     *
+                     * Uses AuditTrailService to display recent logs and statistics.
                      */
-                    // Note: AuditTrailService should be initialized in Main and passed here
-                    System.out.println("Audit Trail Viewer - Implementation requires AuditTrailService instance.");
-                    System.out.println("Features: View recent entries, search, filter, statistics");
+                    System.out.println("AUDIT TRAIL VIEWER");
+                    System.out.println("1. View recent entries");
+                    System.out.println("2. View statistics");
+                    System.out.print("Select option (1-2): ");
+                    int auditOption = 0;
+                    try {
+                        auditOption = Integer.parseInt(sc.nextLine());
+                    } catch (NumberFormatException ignored) { }
+
+                    if (auditOption == 1) {
+                        System.out.print("How many recent entries to display? ");
+                        int count = 50;
+                        try {
+                            count = Integer.parseInt(sc.nextLine());
+                        } catch (NumberFormatException ignored) { }
+
+                        auditTrailService.viewRecentEntries(count, null, null);
+                    } else if (auditOption == 2) {
+                        auditTrailService.displayStatistics();
+                    } else {
+                        System.out.println("Invalid option.");
+                    }
                     break;
 
                 case 19:

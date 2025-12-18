@@ -40,21 +40,27 @@ public class AuditTrailService {
     private static final long MAX_LOG_FILE_SIZE = 10 * 1024 * 1024; // 10MB
     private static final String LOG_DIR = "./data/audit_logs";
     
-    /**
-     * Audit log entry with all required information.
-     */
+    /** Audit log entry with all required information. */
     public static class AuditEntry implements Serializable {
-        private final String timestamp; // ISO 8601 format
+        private final String timestamp;      // ISO 8601 format
         private final String threadId;
         private final String operationType;
         private final String userAction;
-        private final long executionTime; // milliseconds
+        private final long executionTime;    // milliseconds
         private final boolean success;
         private final String details;
-        
+
+        // Used when creating new log entries in memory
         public AuditEntry(String threadId, String operationType, String userAction,
-                         long executionTime, boolean success, String details) {
-            this.timestamp = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+                          long executionTime, boolean success, String details) {
+            this(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+                 threadId, operationType, userAction, executionTime, success, details, false);
+        }
+
+        // Used when reconstructing entries from log file lines
+        private AuditEntry(String timestamp, String threadId, String operationType, String userAction,
+                           long executionTime, boolean success, String details, boolean fromFile) {
+            this.timestamp = timestamp;
             this.threadId = threadId;
             this.operationType = operationType;
             this.userAction = userAction;
@@ -294,24 +300,53 @@ public class AuditTrailService {
         return entries;
     }
     
-    /**
-     * Parses log entry from string (simplified - in production use structured format).
-     */
+    /** Parses a single log line back into an AuditEntry (best-effort). */
     private AuditEntry parseEntry(String line) {
-        // Simplified parsing - in production, use JSON or structured format
         try {
-            String[] parts = line.split("\\|");
-            if (parts.length < 6) return null;
-            
-            String timestamp = parts[0].substring(1).trim();
-            String threadId = parts[1].split(":")[1].trim();
-            String operationType = parts[2].split(":")[1].trim();
-            String userAction = parts[3].split(":")[1].trim();
-            long executionTime = Long.parseLong(parts[4].split(":")[1].replace("ms", "").trim());
-            boolean success = parts[5].split(":")[1].trim().equals("SUCCESS");
-            String details = parts.length > 6 ? parts[6].trim() : "";
-            
-            return new AuditEntry(threadId, operationType, userAction, executionTime, success, details);
+            // Example format from toString():
+            // [2025-12-18T10:15:30.123] Thread:12 | Op:ADD_STUDENT | Action:Add student | Time:20ms | Status:SUCCESS | ID=STU001
+
+            int tsStart = line.indexOf('[');
+            int tsEnd = line.indexOf(']');
+            if (tsStart != 0 || tsEnd <= tsStart) return null;
+            String timestamp = line.substring(tsStart + 1, tsEnd).trim();
+
+            int threadLabel = line.indexOf("Thread:", tsEnd);
+            int opLabel = line.indexOf(" | Op:", threadLabel);
+            if (threadLabel < 0 || opLabel < 0) return null;
+            String threadId = line.substring(threadLabel + "Thread:".length(), opLabel).trim();
+
+            int actionLabel = line.indexOf(" | Action:", opLabel);
+            if (actionLabel < 0) return null;
+            String operationType = line.substring(opLabel + " | Op:".length(), actionLabel).trim();
+
+            int timeLabel = line.indexOf(" | Time:", actionLabel);
+            if (timeLabel < 0) return null;
+            String userAction = line.substring(actionLabel + " | Action:".length(), timeLabel).trim();
+
+            int statusLabel = line.indexOf(" | Status:", timeLabel);
+            if (statusLabel < 0) return null;
+            String timePart = line.substring(timeLabel + " | Time:".length(), statusLabel).trim();
+            if (timePart.endsWith("ms")) {
+                timePart = timePart.substring(0, timePart.length() - 2).trim();
+            }
+            long executionTime = Long.parseLong(timePart);
+
+            int detailsSep = line.indexOf(" |", statusLabel + " | Status:".length());
+            String statusStr;
+            String details;
+            if (detailsSep >= 0) {
+                statusStr = line.substring(statusLabel + " | Status:".length(), detailsSep).trim();
+                details = line.substring(detailsSep + 2).trim();
+            } else {
+                statusStr = line.substring(statusLabel + " | Status:".length()).trim();
+                details = "";
+            }
+            boolean success = "SUCCESS".equalsIgnoreCase(statusStr);
+
+            // Reconstruct entry with original timestamp and parsed fields
+            return new AuditEntry(timestamp, threadId, operationType, userAction,
+                                  executionTime, success, details, true);
         } catch (Exception e) {
             return null;
         }
