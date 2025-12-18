@@ -30,12 +30,21 @@ public class ValidationUtils {
     /** Email Pattern: Standard email format validation */
     private static final Pattern EMAIL_PATTERN = Pattern.compile("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
     
-    /** Phone Pattern: Supports multiple formats - compiled as alternation */
+    /**
+     * Phone Pattern: Ghana phone numbers.
+     *
+     * Supported formats:
+     * - Local:        0XXXXXXXXX      (10 digits, starts with 0)
+     * - International:+233XXXXXXXXX   (country code + 9 digits, no leading 0)
+     *
+     * Examples:
+     * - 0241234567
+     * - 0509876543
+     * - +233241234567
+     * - +233509876543
+     */
     private static final Pattern PHONE_PATTERN = Pattern.compile(
-        "^\\(\\d{3}\\) \\d{3}-\\d{4}$|" +           // (123) 456-7890
-        "^\\d{3}-\\d{3}-\\d{4}$|" +                  // 123-456-7890
-        "^\\+1-\\d{3}-\\d{3}-\\d{4}$|" +             // +1-123-456-7890
-        "^\\d{10}$"                                   // 1234567890
+        "^(0\\d{9}|\\+233\\d{9})$"
     );
     
     /** Name Pattern: Letters, spaces, hyphens, apostrophes (e.g., John O'Brien, Mary-Jane) */
@@ -174,8 +183,8 @@ public class ValidationUtils {
                 error.append("Examples: john.doe@example.com, user123@domain.co.uk");
                 break;
             case "phone":
-                error.append("one of: (123) 456-7890, 123-456-7890, +1-123-456-7890, or 1234567890\n");
-                error.append("Examples: (555) 123-4567, 555-123-4567, +1-555-123-4567, 5551234567");
+                error.append("Ghana phone format: 0XXXXXXXXX or +233XXXXXXXXX (9 digits after country code)\n");
+                error.append("Examples: 0241234567, 0509876543, +233241234567, +233509876543");
                 break;
             case "name":
                 error.append("letters, spaces, hyphens, and apostrophes only\n");

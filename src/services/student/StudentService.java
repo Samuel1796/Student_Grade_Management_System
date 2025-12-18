@@ -282,6 +282,13 @@ public class StudentService {
         // Sort students by Student ID
         List<Student> sortedStudents = new ArrayList<>(studentMap.values());
         sortedStudents.sort(Comparator.comparing(Student::getStudentID, String.CASE_INSENSITIVE_ORDER));
+
+        // If there are no students, show a clear empty-state message instead of a blank table
+        if (sortedStudents.isEmpty()) {
+            System.out.println("| No students found. Please add students first.                                                                                               |");
+            System.out.println("|=============================================================================================================================================|");
+            return;
+        }
     
         for (Student student : sortedStudents) {
             String typeStr = (student instanceof HonorsStudent) ? "Honors" : "Regular";
