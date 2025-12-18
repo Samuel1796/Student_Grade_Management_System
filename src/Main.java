@@ -55,17 +55,7 @@ public class Main {
         // Note: BatchReportTaskManager requires GradeImportExportService
         services.file.GradeImportExportService gradeImportExportService = new services.file.GradeImportExportService(gradeService);
         BatchReportTaskManager batchManager = new BatchReportTaskManager(studentList, gradeImportExportService, format, outputDir, threadCount);
-        batchManager.startBatchExport();
-        while (batchManager.isRunning()) {
-            System.out.println("Background tasks running: " + batchManager.getActiveTasks());
-            try {
-                Thread.sleep(500); // Poll every 0.5s
-            } catch (InterruptedException e) {
-                // Optionally handle interruption (e.g., log or break)
-                System.out.println("Polling interrupted: " + e.getMessage());
-                break;
-            }
-        }
+
         while (running) {
             menuService.displayMainMenu();
 

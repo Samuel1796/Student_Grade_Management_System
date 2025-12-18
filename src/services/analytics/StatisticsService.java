@@ -85,10 +85,7 @@ public class StatisticsService {
      * The median is the middle value when grades are sorted in ascending order.
      * For an odd number of values, it's the middle element.
      * For an even number of values, it's the average of the two middle elements.
-     * 
-     * Time Complexity: O(n log n) due to sorting
-     * Space Complexity: O(n) for storing sorted values
-     * 
+     *
      * @return Median value, or 0.0 if no grades exist.
      */
     public double calculateMedian() {
@@ -118,10 +115,7 @@ public class StatisticsService {
      * 1. Build a frequency map counting occurrences of each grade value
      * 2. Find the grade value with the highest frequency
      * 3. Return 0.0 if all frequencies are equal (no distinct mode)
-     * 
-     * Time Complexity: O(n) - single pass through values
-     * Space Complexity: O(n) - for frequency map in worst case (all unique values)
-     * 
+     *
      * @return Mode value (most frequent grade), or 0.0 if no mode exists.
      */
     public double calculateMode() {
@@ -175,10 +169,7 @@ public class StatisticsService {
      * 3. Sum all squared differences
      * 4. Divide by number of grades (population variance)
      * 5. Take square root to get standard deviation
-     * 
-     * Time Complexity: O(n) - two passes: one for mean, one for variance
-     * Space Complexity: O(1) - only using constant extra space
-     * 
+     *
      * @return Standard deviation value, or 0.0 if no grades exist.
      */
     public double calculateStdDev() {
@@ -242,10 +233,6 @@ public class StatisticsService {
      * 2. For each subject, collect all grade values into a list
      * 3. Calculate the average of each subject's grade list using stream operations
      * 4. Return results in insertion order (LinkedHashMap preserves subject order)
-     * 
-     * Time Complexity: O(n) where n is the number of grades
-     * Space Complexity: O(m) where m is the number of unique subjects
-     * 
      * @return Map of subject names to their average grades, ordered by first appearance.
      */
     public Map<String, Double> getSubjectAverages() {
@@ -289,9 +276,6 @@ public class StatisticsService {
      * 1. Initialize array of 5 bins (one for each grade range)
      * 2. Iterate through all grades and increment appropriate bin based on value
      * 3. Convert bin array to labeled map for readable output
-     * 
-     * Time Complexity: O(n) where n is the number of grades
-     * Space Complexity: O(1) - fixed-size array regardless of input size
      * 
      * @return Map of grade ranges to counts, ordered from lowest to highest range.
      */
@@ -482,10 +466,6 @@ public class StatisticsService {
      * Algorithm:
      * Uses cascading if-statements for efficient range checking.
      * Checks from highest to lowest to match first applicable range.
-     * 
-     * Time Complexity: O(1) - constant time regardless of input
-     * Space Complexity: O(1) - no additional data structures
-     * 
      * @param grade Percentage grade value (0-100)
      * @return Corresponding GPA value on 4.0 scale (0.0-4.0)
      */

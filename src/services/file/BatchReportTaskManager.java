@@ -339,17 +339,17 @@ public class BatchReportTaskManager {
         double elapsed = (System.currentTimeMillis() - startTime) / 1000.0;
         int successCount = totalTasks - failedTasks.get();
         
-        System.out.println("\n╔════════════════════════════════════════════════════════════════════════╗");
-        System.out.println("║                         EXECUTION SUMMARY                              ║");
-        System.out.println("╚════════════════════════════════════════════════════════════════════════╝");
+        System.out.println("\n=======================================================================");
+        System.out.println("                         EXECUTION SUMMARY                              ");
+        System.out.println("========================================================================");
         System.out.println();
         
         // Basic Statistics
-        System.out.println("┌─ BATCH PROCESSING RESULTS ────────────────────────────────────────────┐");
+        System.out.println(" BATCH PROCESSING RESULTS =============================================");
         System.out.printf("│ Total Reports: %-50d │%n", totalTasks);
         System.out.printf("│ Successful: %-53d │%n", successCount);
         System.out.printf("│ Failed: %-56d │%n", failedTasks.get());
-        System.out.println("└────────────────────────────────────────────────────────────────────────┘");
+        System.out.println("=========================================================================");
         System.out.println();
         
         // Time Statistics
@@ -357,24 +357,24 @@ public class BatchReportTaskManager {
         double estimatedSequential = avgTime * totalTasks / 1000.0; // Convert to seconds
         double performanceGain = estimatedSequential > 0 ? estimatedSequential / elapsed : 1.0;
         
-        System.out.println("┌─ TIME STATISTICS ──────────────────────────────────────────────────────┐");
+        System.out.println("===TIME STATISTICS========================================================");
         System.out.printf("│ Total Time: %-52.1f seconds │%n", elapsed);
         System.out.printf("│ Avg Time per Report: %-42.0fms │%n", avgTime);
         System.out.printf("│ Sequential Processing (estimated): %-30.1f seconds │%n", estimatedSequential);
         System.out.printf("│ Concurrent Processing (actual): %-33.1f seconds │%n", elapsed);
         System.out.printf("│ Performance Gain: %-47.1fx faster │%n", performanceGain);
-        System.out.println("└────────────────────────────────────────────────────────────────────────┘");
+        System.out.println("==========================================================================");
         System.out.println();
         
         // Throughput
         double throughput = totalTasks / (elapsed > 0 ? elapsed : 1);
-        System.out.println("┌─ THROUGHPUT METRICS ──────────────────────────────────────────────────┐");
+        System.out.println("===THROUGHPUT METRICS========================================================");
         System.out.printf("│ Reports per Second: %-45.2f │%n", throughput);
-        System.out.println("└────────────────────────────────────────────────────────────────────────┘");
+        System.out.println("=============================================================================");
         System.out.println();
         
         // Thread Pool Statistics
-        System.out.println("┌─ THREAD POOL STATISTICS ────────────────────────────────────────────────┐");
+        System.out.println("===THREAD POOL STATISTICS========================================================");
         System.out.printf("│ Peak Thread Count: %-49d │%n", threadCount);
         System.out.printf("│ Total Tasks Executed: %-46d │%n", totalTasks);
         
@@ -384,11 +384,11 @@ public class BatchReportTaskManager {
             System.out.printf("│ Completed Tasks: %-50d │%n", tpe.getCompletedTaskCount());
             System.out.printf("│ Queue Size: %-55d │%n", tpe.getQueue().size());
         }
-        System.out.println("└────────────────────────────────────────────────────────────────────────┘");
+        System.out.println("================================================================================");
         System.out.println();
         
         // File Information
-        System.out.println("┌─ FILE GENERATION DETAILS ──────────────────────────────────────────────┐");
+        System.out.println("===FILE GENERATION DETAILS========================================================");
         System.out.printf("│ Output Location: %-50s │%n", outputDir);
         System.out.printf("│ Total Files Generated: %-45d │%n", successCount);
         
@@ -407,7 +407,7 @@ public class BatchReportTaskManager {
         } catch (java.io.IOException e) {
             // Ignore size calculation error
         }
-        System.out.println("└────────────────────────────────────────────────────────────────────────┘");
+        System.out.println("=============================================================================");
     }
 
     private String formatFileSize(long size) {

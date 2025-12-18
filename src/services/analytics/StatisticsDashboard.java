@@ -216,9 +216,9 @@ public class StatisticsDashboard {
         clearScreen();
         
         // Header
-        System.out.println("╔════════════════════════════════════════════════════════════════════════╗");
-        System.out.println("║              REAL-TIME STATISTICS DASHBOARD                            ║");
-        System.out.println("╚════════════════════════════════════════════════════════════════════════╝");
+        System.out.println("|========================================================================|");
+        System.out.println("              REAL-TIME STATISTICS DASHBOARD                            ");
+        System.out.println("|========================================================================|");
         System.out.println();
         
         // Status bar
@@ -238,57 +238,57 @@ public class StatisticsDashboard {
         System.out.println();
         
         // System Status
-        System.out.println("┌─ SYSTEM STATUS ──────────────────────────────────────────────────────┐");
-        System.out.printf("│ Total Students: %-50d │%n", studentCount);
+        System.out.println("--- SYSTEM STATUS ------------------------");
+        System.out.printf(" Total Students: %-50d %n", studentCount);
         
         // Active threads
         int activeThreads = Thread.activeCount();
-        System.out.printf("│ Active Threads: %-50d │%n", activeThreads);
+        System.out.printf(" Active Threads: %-50d %n", activeThreads);
         
         // Cache hit rate
         int hits = cacheHits.get();
         int misses = cacheMisses.get();
         double hitRate = (hits + misses > 0) ? (hits * 100.0 / (hits + misses)) : 0.0;
-        System.out.printf("│ Cache Hit Rate: %-49.1f%% │%n", hitRate);
+        System.out.printf(" Cache Hit Rate: %-49.1f%% %n", hitRate);
         
         // Memory usage (approximate)
         Runtime runtime = Runtime.getRuntime();
         long totalMemory = runtime.totalMemory();
         long freeMemory = runtime.freeMemory();
         long usedMemory = totalMemory - freeMemory;
-        System.out.printf("│ Memory Usage: %-52s │%n", 
+        System.out.printf(" Memory Usage: %-52s %n",
             formatBytes(usedMemory) + " / " + formatBytes(totalMemory));
-        System.out.printf("│ Background Thread: %-44s │%n", threadStatus);
-        System.out.printf("│ Calculation State: %-44s │%n", isCalculating.get() ? "LOADING..." : "Idle / Up-to-date");
-        System.out.println("└────────────────────────────────────────────────────────────────────────┘");
+        System.out.printf(" Background Thread: %-44s %n", threadStatus);
+        System.out.printf(" Calculation State: %-44s %n", isCalculating.get() ? "LOADING..." : "Idle / Up-to-date");
+        System.out.println("|=======================================================================|");
         System.out.println();
         
         // Live Statistics
-        System.out.println("┌─ LIVE STATISTICS ────────────────────────────────────────────────────┐");
+        System.out.println(" LIVE STATISTICS ================================================");
         Integer totalGrades = (Integer) getFromCache("totalGrades");
         if (totalGrades != null) {
-            System.out.printf("│ Total Grades: %-51d │%n", totalGrades);
+            System.out.printf(" Total Grades: %-51d %n", totalGrades);
         }
         
         Long calcTime = (Long) getFromCache("calculationTime");
         if (calcTime != null) {
-            System.out.printf("│ Average Processing Time: %-42dms │%n", calcTime);
+            System.out.printf(" Average Processing Time: %-42dms %n", calcTime);
         }
-        System.out.println("└────────────────────────────────────────────────────────────────────────┘");
+        System.out.println("|=================================================================|");
         System.out.println();
         
         // Grade Distribution
         @SuppressWarnings("unchecked")
         Map<String, Integer> distribution = (Map<String, Integer>) getFromCache("gradeDistribution");
         if (distribution != null) {
-            System.out.println("┌─ GRADE DISTRIBUTION (Live) ────────────────────────────────────────┐");
+            System.out.println(" GRADE DISTRIBUTION (Live) =====================================");
             displayGradeDistribution(distribution, totalGrades != null ? totalGrades : 0);
-            System.out.println("└────────────────────────────────────────────────────────────────────────┘");
+            System.out.println("==============================================================");
             System.out.println();
         }
         
         // Current Statistics
-        System.out.println("┌─ CURRENT STATISTICS ──────────────────────────────────────────────────┐");
+        System.out.println(" CURRENT STATISTICS =====================================================");
         Double mean = (Double) getFromCache("mean");
         Double median = (Double) getFromCache("median");
         Double stdDev = (Double) getFromCache("stdDev");
@@ -302,24 +302,24 @@ public class StatisticsDashboard {
         if (stdDev != null) {
             System.out.printf("│ Std Dev: %-55.1f%% │%n", stdDev);
         }
-        System.out.println("└────────────────────────────────────────────────────────────────────────┘");
+        System.out.println("==========================================================================");
         System.out.println();
         
         // Top Performers
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> topPerformers = (List<Map<String, Object>>) getFromCache("topPerformers");
         if (topPerformers != null && !topPerformers.isEmpty()) {
-            System.out.println("┌─ TOP PERFORMERS (Live Rankings) ───────────────────────────────────┐");
+            System.out.println("TOP PERFORMERS (Live Rankings) ===================================");
             int rank = 1;
             for (Map<String, Object> performer : topPerformers) {
-                System.out.printf("│ %d. %s - %s - %.1f%% GPA: %.2f%n",
+                System.out.printf(" %d. %s - %s - %.1f%% GPA: %.2f%n",
                     rank++,
                     performer.get("studentId"),
                     performer.get("name"),
                     performer.get("average"),
                     performer.get("gpa"));
             }
-            System.out.println("└────────────────────────────────────────────────────────────────────────┘");
+            System.out.println("==========================================================");
             System.out.println();
         }
         

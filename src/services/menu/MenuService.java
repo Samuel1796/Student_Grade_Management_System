@@ -48,7 +48,7 @@ public class MenuService {
         System.out.println("| STUDENT GRADE MANAGEMENT - MAIN MENU             |");
         System.out.println("|          [Advanced Edition v3.0]                 |");
         System.out.println("+===================================================+");
-        System.out.println("| " + statusLine.toString() + String.format("%" + (50 - statusLine.length()) + "s", "") + " |");
+        System.out.println("| " + statusLine + String.format("%" + (50 - statusLine.length()) + "s", "") + " |");
         System.out.println("+===================================================+");
         System.out.println();
 

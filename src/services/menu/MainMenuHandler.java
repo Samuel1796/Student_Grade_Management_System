@@ -59,7 +59,7 @@ public class MainMenuHandler {
                             String nameError = ValidationUtils.validateName(name);
                             if (nameError != null) {
                                 System.out.println(nameError);
-                                continue; // Retry name input
+                                continue;
                             }
 
                             int age = -1;
@@ -353,7 +353,7 @@ System.out.println("ERROR: " + e.getMessage());
                         System.out.println("Report exported successfully!");
                     } catch (Exception e) {
                         System.out.println("Export failed: " + e.getMessage());
-                        e.printStackTrace();
+//                        e.printStackTrace();
                     }
                     break;
 
@@ -441,26 +441,9 @@ System.out.println("ERROR: " + e.getMessage());
 
 //                    BULK IMPORT
                 case 7:
-                    /**
-                     * Bulk Grade Import Handler
-                     * 
-                     * This menu option allows administrators to import multiple grades
-                     * from CSV or JSON files in a single operation. The import process
-                     * includes comprehensive error handling, duplicate detection, and
-                     * detailed reporting of success/failure statistics.
-                     * 
-                     * User Input Flow:
-                     * 1. Select file format (CSV or JSON)
-                     * 2. Enter filename (without extension)
-                     * 3. System validates and processes file
-                     * 4. Display import summary with success/failure counts
-                     * 
-                     * Error Handling:
-                     * - Invalid format selection: prompts user to retry
-                     * - Empty filename: prevents processing and returns to menu
-                     * - File not found: caught and reported by bulkImportGrades()
-                     * - Malformed records: tracked and reported in import summary
-                     */
+
+//                      Bulk Grade Import Handler
+
                     System.out.println("IMPORT GRADES");
                     System.out.println("1. CSV");
                     System.out.println("2. JSON");
@@ -502,7 +485,7 @@ System.out.println("ERROR: " + e.getMessage());
                         // Catch-all exception handler: ensures menu doesn't crash
                         // Print error message and stack trace for debugging
                         System.out.println("Grade import failed: " + e.getMessage());
-                        e.printStackTrace();
+//                        e.printStackTrace();
                     }
                     break;
 
@@ -550,14 +533,9 @@ System.out.println("ERROR: " + e.getMessage());
                 case 10:
                     /**
                      * Real-Time Statistics Dashboard Handler
-                     *
-                     * Implements US-5: Real-Time Statistics Dashboard with Background Thread.
-                     *
                      * Features:
                      * - Auto-refreshing dashboard every 5 seconds (background daemon thread)
                      * - Live grade distribution, averages, and top performers
-                     * - Manual refresh, pause/resume, and quit controls
-                     * - Thread-safe data handling via ConcurrentHashMap and atomics
                      */
                     // Create StatisticsDashboard using current GradeService data and student collection
                     StatisticsDashboard dashboard = new StatisticsDashboard(
@@ -615,26 +593,9 @@ System.out.println("ERROR: " + e.getMessage());
 
 //                    GENERATE BATCH REPORT
                 case 11:
-                    /**
-                     * Batch Report Generation Handler
-                     * 
-                     * This menu option orchestrates concurrent batch report generation
-                     * for multiple students. It implements a sophisticated workflow:
-                     * 1. Student selection (scope filtering)
-                     * 2. Format selection (single or multi-format)
-                     * 3. Thread pool configuration (performance tuning)
-                     * 4. Concurrent execution with progress monitoring
-                     * 
-                     * Design Pattern:
-                     * - Strategy pattern: different scope selection strategies
-                     * - Factory pattern: creates BatchReportTaskManager with configuration
-                     * - Observer pattern: progress updates during execution
-                     * 
-                     * Performance Considerations:
-                     * - Thread pool size based on available CPU cores
-                     * - Concurrent execution reduces total processing time
-                     * - File I/O is primary bottleneck (not CPU-bound)
-                     */
+
+//                    Batch Report Generation Handler
+
                     System.out.println("GENERATE BATCH REPORTS");
                     System.out.println("Report Scope:");
                     System.out.println("1. All Students");
@@ -855,11 +816,11 @@ System.out.println("ERROR: " + e.getMessage());
                             String domainPattern = sc.nextLine();
                             patternSearchResults = patternSearch.searchByEmailDomain(domainPattern, caseSensitive);
                             break;
-                        case 2:
-                            System.out.print("Enter area code pattern (e.g., 555 or 5**): ");
-                            String areaCodePattern = sc.nextLine();
-                            patternSearchResults = patternSearch.searchByPhoneAreaCode(areaCodePattern, caseSensitive);
-                            break;
+//                        case 2:
+//                            System.out.print("Enter area code pattern (e.g., 555 or 5**): ");
+//                            String areaCodePattern = sc.nextLine();
+//                            patternSearchResults = patternSearch.searchByPhoneAreaCode(areaCodePattern, caseSensitive);
+//                            break;
                         case 3:
                             System.out.print("Enter Student ID pattern (e.g., STU0** or STU???): ");
                             String idPattern = sc.nextLine();
