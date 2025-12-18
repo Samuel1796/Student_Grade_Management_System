@@ -83,13 +83,6 @@ public class ValidationUtils {
     
     /**
      * Validates a phone number in any supported format.
-     * 
-     * Supported formats:
-     * - (123) 456-7890
-     * - 123-456-7890
-     * - +1-123-456-7890
-     * - 1234567890
-     * 
      * @param phone The phone number to validate
      * @return true if valid, false otherwise
      */

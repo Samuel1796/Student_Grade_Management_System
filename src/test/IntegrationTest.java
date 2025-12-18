@@ -1,127 +1,78 @@
 //package test;
 //
-//import exceptions.AppExceptions;
 //import exceptions.DuplicateStudentException;
 //import models.Grade;
-//import models.HonorsStudent;
+//import models.RegularStudent;
 //import models.Student;
-//import models.Subject;
 //import org.junit.jupiter.api.BeforeEach;
 //import org.junit.jupiter.api.Test;
-//import services.GradeService;
-//import services.StudentService;
+//import services.file.GradeImportExportService;
+//import services.file.GradeService;
+//import services.student.StudentService;
 //
+//import java.io.File;
 //import java.io.IOException;
 //import java.util.Date;
 //
 //import static org.junit.jupiter.api.Assertions.*;
-//import static org.mockito.Mockito.*;
 //
 ///**
-// * Integration tests for GradeService and related student/subject interactions.
-// * Uses mocks to simulate dependencies and verify integration points.
+// * Lightweight integration tests covering interactions between
+// * GradeService, GradeImportExportService, and StudentService.
 // */
-//
 //class IntegrationTest {
 //
 //    private GradeService gradeService;
-//    private StudentService mockStudentService;
-//    private Student mockStudent;
-//    private Subject mockSubject;
-//
-//    /**
-//     * Sets up mocks and GradeService for integration testing.
-//     */
+//    private GradeImportExportService importExportService;
+//    private StudentService studentService;
+//    private Student student;
 //
 //    @BeforeEach
-//    void setUp() {
+//    void setUp() throws DuplicateStudentException {
 //        gradeService = new GradeService(10);
-//        mockStudentService = mock(StudentService.class);
-//        mockStudent = mock(Student.class);
-//        mockSubject = mock(Subject.class);
+//        importExportService = new GradeImportExportService(gradeService);
+//        studentService = new StudentService();
 //
-//        when(mockStudent.getStudentID()).thenReturn("STU001");
-//        when(mockStudent.getName()).thenReturn("Test Student");
-//        when(mockStudent.getPassingGrade()).thenReturn(50);
-//        when(mockStudent.calculateAverage(any(GradeService.class))).thenReturn(80.0);
-//        when(mockStudent.isPassing(any(GradeService.class))).thenReturn(true);
-//
+//        student = new RegularStudent("Integration User", 22, "integration@example.com", "0241112223");
+//        studentService.addStudent(student);
 //    }
 //
-//
-//    /**
-//     * Tests recording a grade and viewing the grade report for a mocked honors student.
-//     */
 //    @Test
-//    void testRecordGradeAndViewGradeReport() {
-//        Grade grade = new Grade("GRD001", "STU001", "Mathematics", "Core Subject", 89, new Date());
-//        gradeService.recordGrade(grade);
+//    void testRecordGradeAndViewGradeReportDoesNotThrow() {
+//        Grade grade = new Grade("GRD001", student.getStudentID(),
+//                "Mathematics", "Core Subject", 89, new Date());
+//        assertTrue(gradeService.recordGrade(grade, studentService));
 //
-//        // Should not throw any exceptions when viewing grade report
-//        assertDoesNotThrow(() -> gradeService.viewGradeReport(mockStudent));
-//        assertEquals(1, gradeService.getGradeCount());
+//        assertDoesNotThrow(() -> gradeService.viewGradeReport(student));
+//        assertEquals(1, gradeService.countGradesForStudent(student));
 //    }
 //
-//    /**
-//     * Tests exporting a grade report for a mocked honors student.
-//     */
 //    @Test
-//    void testExportGradeReportWithMockedStudent() throws IOException {
-//        Grade grade = new Grade("GRD002", "STU001", "Science", "Core Subject", 85, new Date());
-//        gradeService.recordGrade(grade);
+//    void testExportGradeReportCreatesReportFile() throws IOException {
+//        Grade grade = new Grade("GRD002", student.getStudentID(),
+//                "Science", "Core Subject", 85, new Date());
+//        gradeService.recordGrade(grade, studentService);
 //
-//        String filePath = gradeService.exportGradeReport(mockStudent, 3, "test_export");
-//        assertTrue(filePath.contains("test_export.txt"));
+//        String path = importExportService.exportGradeReport(student, 3, "integration_export");
+//        File report = new File(path);
+//
+//        assertTrue(path.endsWith("integration_export.txt"));
+//        assertTrue(report.exists());
+//        assertTrue(report.length() > 0);
 //    }
 //
-//    /**
-//     * Tests recording multiple grades and verifying the count for a mocked honors student.
-//     */
 //    @Test
-//    void testMultipleGradeRecordsWithMockedStudent() {
-//        Grade grade1 = new Grade("GRD011", "STU001", "Mathematics", "Core Subject", 75, new Date());
-//        Grade grade2 = new Grade("GRD012", "STU001", "English", "Core Subject", 85, new Date());
-//        gradeService.recordGrade(grade1);
-//        gradeService.recordGrade(grade2);
+//    void testMultipleGradesCountedCorrectly() {
+//        Grade grade1 = new Grade("GRD011", student.getStudentID(),
+//                "Mathematics", "Core Subject", 75, new Date());
+//        Grade grade2 = new Grade("GRD012", student.getStudentID(),
+//                "English", "Core Subject", 85, new Date());
 //
-//        // Should count 2 grades for the mocked student
-//        assertEquals(2, gradeService.countGradesForStudent(mockStudent));
+//        gradeService.recordGrade(grade1, studentService);
+//        gradeService.recordGrade(grade2, studentService);
+//
+//        assertEquals(2, gradeService.countGradesForStudent(student));
 //    }
-//
-//    /**
-//     * Tests subject retrieval using mocked StudentService.
-//     */
-//    @Test
-//    void testFindSubjectByNameAndTypeWithMock() {
-//        when(mockStudentService.findSubjectByNameAndType("Mathematics", "Core Subject")).thenReturn(mockSubject);
-//
-//        // Should return the mocked subject
-//        Subject foundSubject = mockStudentService.findSubjectByNameAndType("Mathematics", "Core Subject");
-//        assertNotNull(foundSubject);
-//        assertEquals(mockSubject, foundSubject);
-//    }
-//
-//
-//
-//    /**
-//     * Tests counting grades for a mocked honors student.
-//     */
-//    @Test
-//    void testCountGradesForMockedStudent() {
-//        Grade grade1 = new Grade("GRD005", "STU001", "Mathematics", "Core Subject", 90, new Date());
-//        Grade grade2 = new Grade("GRD006", "STU001", "English", "Core Subject", 85, new Date());
-//        gradeService.recordGrade(grade1);
-//        gradeService.recordGrade(grade2);
-//
-//        // Should count 2 grades for the mocked student
-//        assertEquals(2, gradeService.countGradesForStudent(mockStudent));
-//    }
-//
-//
-//
-//
-//
-//
-//
-//
 //}
+//
+//

@@ -336,9 +336,9 @@ public class TaskScheduler {
      * Displays all active scheduled tasks.
      */
     public void displayActiveTasks() {
-        System.out.println("\n╔════════════════════════════════════════════════════════════════════════╗");
-        System.out.println("║                    SCHEDULED TASKS OVERVIEW                             ║");
-        System.out.println("╚════════════════════════════════════════════════════════════════════════╝");
+        System.out.println("\n========================================================================");
+        System.out.println("                    SCHEDULED TASKS OVERVIEW                             ");
+        System.out.println("==========================================================================");
         System.out.println();
         
         if (scheduledTasks.isEmpty()) {
@@ -349,7 +349,7 @@ public class TaskScheduler {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         
         for (ScheduledTask task : scheduledTasks.values()) {
-            System.out.println("┌─ " + task.getTaskName() + " ────────────────────────────────────────────────┐");
+            System.out.println(" " + task.getTaskName() + "===================================================");
             System.out.printf("│ Task ID: %-55s │%n", task.getTaskId());
             System.out.printf("│ Schedule: %-54s │%n", 
                 task.getScheduleType() + " (" + task.getScheduleValue() + ")");
@@ -369,7 +369,7 @@ public class TaskScheduler {
                 System.out.printf("│ Countdown: %-54d seconds │%n", Math.max(0, secondsUntilNext));
             }
             
-            System.out.println("└────────────────────────────────────────────────────────────────────────┘");
+            System.out.println("==============================================================================");
             System.out.println();
         }
     }

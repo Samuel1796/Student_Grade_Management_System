@@ -1,126 +1,117 @@
-//package test;
-//
-//import exceptions.DuplicateStudentException;
-//import exceptions.StudentNotFoundException;
-//import models.HonorsStudent;
-//import models.RegularStudent;
-//import models.Student;
-//import org.junit.jupiter.api.BeforeEach;
-//import org.junit.jupiter.api.Test;
-//import services.GradeService;
-//import services.StudentService;
-//
-//import static org.junit.jupiter.api.Assertions.*;
-//
-//
-///**
-// * Unit tests for StudentService.
-// * Verifies student management operations such as adding, searching, and validation.
-// */
-//
-//class StudentServiceTest {
-//    StudentService studentService;
-//    GradeService gradeService;
-//
-//    // Sample students for testing
-//    Student s1  = new RegularStudent("Bankah", 22, "bankah@gmail.com", "0557272539");
-//    Student s2  = new RegularStudent("Anthony", 22, "anthony@gmail.com", "0557272539");
-//
-//    /**
-//     * Initializes StudentService before each test.
-//     */
-//    @BeforeEach
-//    void setUp() {
-//        studentService = new StudentService(5);
-//    }
-//
-//    @Test
-//    void testisValidEmail() {
-//        assertTrue(studentService.isValidEmail("mine@gmail.com"));
-//        assertFalse(studentService.isValidEmail("kofi is a boy"));
-//    }
-//
-////    @Test
-////    void TestIsDuplicateStudent() {
-////        studentService.addStudent(s1);
-////        assertTrue(studentService.isDuplicateStudent("Bankah", "bankah@gmail.com"));
-////        assertFalse(studentService.isDuplicateStudent("Yosh", "ada@gmail.com"));
-////        assertThrows(DuplicateStudentException.class, ()-> {
-////            studentService.isDuplicateStudent("Bankah", "bankah@gmail.com");
-////        });
-////
-////    }
-//
-//    @Test
-//    void TestAddStudent() {
-////        Student s  = new RegularStudent("Bankah", 22, "banah@gmail.com", "0557272539");
-//        studentService.addStudent(s1);
-//        assertEquals(s1, studentService.findStudentById(s1.getStudentID()));
-//    }
-//
-//    @Test
-//    void TestFindStudentById() {
-//
-//        studentService.addStudent(s1);
-//        studentService.addStudent(s2);
-//
-//        assertEquals(s1, studentService.findStudentById(s1.getStudentID()));
-//        assertEquals(s2, studentService.findStudentById(s2.getStudentID()));
-//        assertNotEquals(s1, studentService.findStudentById(s2.getStudentID()));
-////        assertNull(studentService.findStudentById("STU003"));
-//    }
-//
-//    @Test
-//    void testStudentNotFound() {
-//        assertThrows(StudentNotFoundException.class, ()->{
-//                studentService.findStudentById("STU003");
-//        });
-//    }
-//
-//    @Test
-//    void searchStudentsByName() {
-//        studentService.addStudent(s1);
-//        Student[] results = studentService.searchStudentsByName("Bankah");
-//        assertEquals(1, results.length); // Only s1 should match
-//        assertEquals(s1, results[0]);    // The first (and only) result should be s1
-//    }
-//
-//
-//    @Test
-//    void searchStudentsByType() {
-//        Student s3  = new HonorsStudent("Ant", 22, "ant@gmail.com", "0557272539");
-//        studentService.addStudent(s1);
-//        studentService.addStudent(s2);
-//        studentService.addStudent(s3);
-//
-////        FOR REGULAR STUDENTS
-//        Student[] regulars = studentService.searchStudentsByType(false);
-//        assertEquals(2, regulars.length);
-//        assertEquals(s2, regulars[1]);
-//
-////        FOR HONORS STUDENTS
-//        Student[] honors = studentService.searchStudentsByType(true);
-//        assertEquals(1, honors.length);
-//        assertEquals(s3, honors[0]);
-//    }
-//
-//
-//
-//
-////    EDGE CASES
-//@Test
-//void testAddDuplicateStudentThrowsException() {
-//    studentService.addStudent(s1);
-//    assertThrows(DuplicateStudentException.class, () -> {
-//        studentService.addStudent(s1);
-//    });
-//}
-//
-//    @Test
-//    void testFindNonExistentSubjectReturnsNull() {
-//        Student s3 = new RegularStudent("Test", 20, "test@email.com", "1234567890");
-//        studentService.addStudent(s3);
-//        assertNull(studentService.findSubjectByNameAndType("NonExistentSubject", "Core"));
-//    }
-//
-//}
+package test;
+
+import exceptions.DuplicateStudentException;
+import exceptions.StudentNotFoundException;
+import models.HonorsStudent;
+import models.RegularStudent;
+import models.Student;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import services.file.GradeService;
+import services.student.StudentService;
+
+import java.util.Date;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+/**
+ * Unit tests for StudentService (v2.0).
+ * Verifies student management, search operations, duplicate detection, and basic validation.
+ */
+class StudentServiceTest {
+
+    private StudentService studentService;
+    private GradeService gradeService;
+    private Student regularStudent;
+    private Student honorsStudent;
+
+    @BeforeEach
+    void setUp() throws DuplicateStudentException {
+        studentService = new StudentService();
+        gradeService = new GradeService(20);
+
+        regularStudent = new RegularStudent("John Doe", 20, "john.doe@example.com", "0241234567");
+        honorsStudent  = new HonorsStudent("Jane Smith", 21, "jane.smith@example.com", "0249876543");
+
+        studentService.addStudent(regularStudent);
+        studentService.addStudent(honorsStudent);
+    }
+
+    @Test
+    void testAddAndFindStudentById() throws StudentNotFoundException {
+        Student found = studentService.findStudentById(regularStudent.getStudentID());
+        assertSame(regularStudent, found);
+
+        Student foundHonors = studentService.findStudentById(honorsStudent.getStudentID());
+        assertSame(honorsStudent, foundHonors);
+    }
+
+    @Test
+    void testFindStudentByIdThrowsWhenNotFound() {
+        assertThrows(StudentNotFoundException.class,
+                () -> studentService.findStudentById("STU999"));
+    }
+
+    @Test
+    void testAddDuplicateStudentThrowsDuplicateStudentException() {
+        assertThrows(DuplicateStudentException.class,
+                () -> studentService.addStudent(regularStudent));
+    }
+
+    @Test
+    void testIsDuplicateStudentByNameAndEmail() {
+        assertTrue(studentService.isDuplicateStudent("John Doe", "john.doe@example.com"));
+        assertFalse(studentService.isDuplicateStudent("Other Name", "other@example.com"));
+    }
+
+    @Test
+    void testSearchStudentsByName_PartialAndCaseInsensitive() throws DuplicateStudentException {
+        Student extra = new RegularStudent("Johnny Johnson", 19, "johnny@example.com", "0240000000");
+        studentService.addStudent(extra);
+
+        Student[] results = studentService.searchStudentsByName("john");
+        assertEquals(2, results.length);
+    }
+
+    @Test
+    void testSearchStudentsByTypeFiltersRegularAndHonors() {
+        Student[] regulars = studentService.searchStudentsByType(false);
+        Student[] honors   = studentService.searchStudentsByType(true);
+
+        assertEquals(1, regulars.length);
+        assertSame(regularStudent, regulars[0]);
+
+        assertEquals(1, honors.length);
+        assertSame(honorsStudent, honors[0]);
+    }
+
+    @Test
+    void testSearchStudentsByGradeRange_UsesGradeService() throws DuplicateStudentException {
+        // Record grades for both students
+        gradeService.recordGrade(
+                new models.Grade("GRD001", regularStudent.getStudentID(), "Math", "Core Subject", 95, new Date()),
+                studentService
+        );
+        gradeService.recordGrade(
+                new models.Grade("GRD002", honorsStudent.getStudentID(), "Math", "Core Subject", 60, new Date()),
+                studentService
+        );
+
+        Student[] topPerformers = studentService.searchStudentsByGradeRange(90, 100, gradeService);
+        assertEquals(1, topPerformers.length);
+        assertSame(regularStudent, topPerformers[0]);
+    }
+
+    @Test
+    void testIsValidEmailSimpleRegex() {
+        assertTrue(studentService.isValidEmail("user+1@example.com"));
+        assertFalse(studentService.isValidEmail("invalid-email"));
+    }
+
+    @Test
+    void testFindSubjectByNameAndTypeReturnsNullWhenMissing() {
+        assertNull(studentService.findSubjectByNameAndType("NonExistentSubject", "Core"));
+    }
+}
+
+

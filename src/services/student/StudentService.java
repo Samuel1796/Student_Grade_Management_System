@@ -15,7 +15,6 @@ import java.nio.file.Paths;
  */
 
 public class StudentService {
-    // HashMap for O(1) average-case add/get by normalized student ID (fast lookup on large datasets).
     private final HashMap<String, Student> studentMap = new HashMap<>();
 
     /**
@@ -54,47 +53,32 @@ public class StudentService {
      * - Name matching: case-insensitive comparison for flexibility
      * - Type matching: uses instanceof to check class hierarchy
      * - Supports multiple type string formats for backward compatibility
-     * 
-     * Performance Characteristics:
-     * - Time Complexity: O(n * m) where n = students, m = average subjects per student
-     * - Space Complexity: O(1) - no additional data structures
-     * - Early termination: returns immediately when match is found
+     *
      * 
      * Design Considerations:
      * - Returns first match (assumes subject instances are equivalent)
      * - Null-safe: handles null subjects and null lists gracefully
      * - Type checking uses instanceof for reliable class hierarchy detection
      * 
-     * Alternative Approaches:
-     * For better performance with frequent lookups, consider:
-     * - Maintaining a separate subject index (HashMap)
-     * - Caching subject lookups
-     * - Using a subject registry service
-     * 
      * @param name The subject name to search for (case-insensitive)
      * @param type The type ("Core", "Elective", "Core Subject", "Elective Subject")
      * @return The matching Subject instance, or null if not found
      */
+
     public Subject findSubjectByNameAndType(String name, String type) {
         // Linear search: iterate through all students
-        // This approach is simple but O(n*m) - acceptable for typical class sizes
         for (Student s : getStudents()) {
             List<Subject> enrolledSubjects = s.getEnrolledSubjects();
             
             // Null-safe check: handle students with no enrolled subjects
             if (enrolledSubjects != null) {
-                // Check each subject enrolled by this student
                 for (Subject subj : enrolledSubjects) {
-                    // Null-safe check: skip null subjects (defensive programming)
                     if (subj != null && subj.getSubjectName().equalsIgnoreCase(name)) {
-                        // Type matching: check class hierarchy using instanceof
-                        // Supports multiple string formats for backward compatibility
                         if ((type.equalsIgnoreCase("Core") && subj instanceof CoreSubject) ||
                                 (type.equalsIgnoreCase("Elective") && subj instanceof ElectiveSubject) ||
                                 (type.equalsIgnoreCase("Core Subject") && subj instanceof CoreSubject) ||
                                 (type.equalsIgnoreCase("Elective Subject") && subj instanceof ElectiveSubject)) {
                             // Match found: return first matching subject
-                            // Early termination: exits as soon as match is found
                             return subj;
                         }
                     }
@@ -145,7 +129,6 @@ public class StudentService {
     /**
      * Searches for students by partial or full name match using case-insensitive substring matching.
      * 
-     * This method uses Java Stream API for functional-style filtering:
      * - Converts student collection to stream
      * - Filters students whose name contains the search term (case-insensitive)
      * - Collects results into an array
@@ -154,27 +137,15 @@ public class StudentService {
      * - Case-insensitive: "john" matches "John", "JOHN", "johnny"
      * - Substring matching: "john" matches "John Doe", "Johnny", "Little John"
      * - Partial matching: finds students even if search term is part of full name
-     * 
-     * Performance:
-     * - Time Complexity: O(n) where n is number of students
-     * - Space Complexity: O(m) where m is number of matches
-     * - Stream operations are lazy and efficient
-     * 
-     * Use Cases:
-     * - Quick name lookup: "Find students with 'Smith' in name"
-     * - Fuzzy search: "Find students with 'john' anywhere in name"
-     * - Autocomplete: "Find students starting with 'A'"
-     * 
+
      * Limitations:
      * - No ranking: results are in arbitrary order
      * - No exact match prioritization: "John" and "Johnny" treated equally
-     * - No fuzzy matching: typos won't be caught
-     * 
+     *
      * @param namePart Search term (partial or full name, case-insensitive)
      * @return Array of Student objects whose names contain the search term
      */
     public Student[] searchStudentsByName(String namePart) {
-        // Stream over HashMap values in O(n) to build a filtered result array.
         return studentMap.values().stream()
                 // Filter: keep only students whose name contains search term
                 // Case-insensitive: convert both to lowercase for comparison
@@ -197,12 +168,6 @@ public class StudentService {
      * - Inclusive bounds: students with exactly min or max are included
      * - Range validation: assumes min <= max (caller's responsibility)
      * - Handles edge cases: min = max finds students with exact average
-     * 
-     * Performance Considerations:
-     * - Time Complexity: O(n) where n is number of students
-     * - Each student requires average calculation: O(g) where g is grades per student
-     * - Overall: O(n * g) - can be expensive for large datasets
-     * 
      * Optimization Opportunities:
      * - Cache average grades to avoid recalculation
      * - Pre-compute averages during grade updates
@@ -219,7 +184,6 @@ public class StudentService {
      * @return Array of Student objects whose average grade is within the specified range
      */
     public Student[] searchStudentsByGradeRange(double min, double max, services.file.GradeService gradeService) {
-        // Stream API with range filtering; overall O(n * g) where g is grades per student.
         return studentMap.values().stream()
                 .filter(s -> {
                     // Calculate average for this student
@@ -233,6 +197,7 @@ public class StudentService {
                 .toArray(Student[]::new);
     }
 
+
     /**
      * Searches for students by type (Honors or Regular) using instanceof check.
      * 
@@ -245,11 +210,7 @@ public class StudentService {
      * - More reliable than string comparison or flag checking
      * - Works correctly with inheritance and polymorphism
      * 
-     * Performance:
-     * - Time Complexity: O(n) where n is number of students
-     * - Space Complexity: O(m) where m is number of matches
-     * - instanceof is a fast operation (O(1) per check)
-     * 
+
      * Use Cases:
      * - Filter honors students: honors=true
      * - Filter regular students: honors=false
@@ -306,82 +267,13 @@ public class StudentService {
         System.out.println("|=============================================================================================================================================|");
     }
 
-    /**
-     * Returns students sorted by performance: average grade (desc), then name, then ID.
-     * Uses a custom Comparator; overall sort cost is O(n log n) on the HashMap value snapshot.
-     */
-    public List<Student> getStudentsSortedByPerformance(services.file.GradeService gradeService) {
-        List<Student> sorted = new ArrayList<>(studentMap.values());
-        Comparator<Student> performanceComparator = Comparator
-                .comparingDouble((Student s) -> s.calculateAverage(gradeService)).reversed()
-                .thenComparing(Student::getName, String.CASE_INSENSITIVE_ORDER)
-                .thenComparing(Student::getStudentID, String.CASE_INSENSITIVE_ORDER);
-        sorted.sort(performanceComparator);
-        return sorted;
-    }
 
-    /**
-     * Returns a string representation of the subjects a student is enrolled in.
-     * @return Comma-separated string of subjects
-     */
-    public String getEnrolledSubjectsString(Student student) {
-        return student.getEnrolledSubjectsString();
-    }
 
-    public void exportStudentsCSV(String filename) throws IOException {
-        FileIOUtils.writeStudentsToCSV(Paths.get("./reports/" + filename + ".csv"), getStudents());
-    }
 
-    public void importStudentsCSV(String filename) throws IOException {
-        List<Student> imported = FileIOUtils.readStudentsFromCSV(Paths.get("./imports/" + filename + ".csv"));
-        int importedCount = 0, duplicateCount = 0;
-        for (Student s : imported) {
-            String normalizedId = s.getStudentID().toUpperCase();
-            if (studentMap.containsKey(normalizedId) || isDuplicateStudent(s.getName(), s.getEmail())) {
-                duplicateCount++;
-                continue;
-            }
-            addStudent(s);
-            importedCount++;
-        }
-        System.out.printf("Import completed: %d students imported, %d duplicates skipped.%n", importedCount, duplicateCount);
-    }
 
-    public void exportStudentsJSON(String filename) throws IOException {
-        FileIOUtils.writeStudentsToJSON(Paths.get("./reports/" + filename + ".json"), getStudents());
-    }
 
-    public void importStudentsJSON(String filename) throws IOException {
-        List<Student> imported = FileIOUtils.readStudentsFromJSON(Paths.get("./imports/" + filename + ".json"));
-        int importedCount = 0, duplicateCount = 0;
-        for (Student s : imported) {
-            String normalizedId = s.getStudentID().toUpperCase();
-            if (studentMap.containsKey(normalizedId) || isDuplicateStudent(s.getName(), s.getEmail())) {
-                duplicateCount++;
-                continue;
-            }
-            addStudent(s);
-            importedCount++;
-        }
-        System.out.printf("Import completed: %d students imported, %d duplicates skipped.%n", importedCount, duplicateCount);
-    }
 
-    public void exportStudentsBinary(String filename) throws IOException {
-        FileIOUtils.writeStudentsToBinary(Paths.get("./reports/" + filename + ".bin"), getStudents());
-    }
 
-    public void importStudentsBinary(String filename) throws IOException, ClassNotFoundException {
-        List<Student> imported = FileIOUtils.readStudentsFromBinary(Paths.get("./imports/" + filename + ".bin"));
-        int importedCount = 0, duplicateCount = 0;
-        for (Student s : imported) {
-            String normalizedId = s.getStudentID().toUpperCase();
-            if (studentMap.containsKey(normalizedId) || isDuplicateStudent(s.getName(), s.getEmail())) {
-                duplicateCount++;
-                continue;
-            }
-            addStudent(s);
-            importedCount++;
-        }
-        System.out.printf("Import completed: %d students imported, %d duplicates skipped.%n", importedCount, duplicateCount);
-    }
+
+
 }

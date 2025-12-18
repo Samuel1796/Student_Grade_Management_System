@@ -220,9 +220,9 @@ public class AuditTrailService {
     public void viewRecentEntries(int count, String operationType, String threadId) {
         List<AuditEntry> entries = readRecentEntries(count, operationType, threadId);
         
-        System.out.println("\n╔════════════════════════════════════════════════════════════════════════╗");
-        System.out.println("║                      AUDIT TRAIL ENTRIES                                ║");
-        System.out.println("╚════════════════════════════════════════════════════════════════════════╝");
+        System.out.println("\n=========================================================================");
+        System.out.println("                      AUDIT TRAIL ENTRIES                                ");
+        System.out.println("=========================================================================");
         System.out.println();
         
         if (entries.isEmpty()) {
@@ -231,7 +231,7 @@ public class AuditTrailService {
         }
         
         for (AuditEntry entry : entries) {
-            System.out.println("┌─ Entry ─────────────────────────────────────────────────────────────┐");
+            System.out.println("== Entry=================================================================");
             System.out.printf("│ Timestamp: %-54s │%n", entry.getTimestamp());
             System.out.printf("│ Thread ID: %-54s │%n", entry.getThreadId());
             System.out.printf("│ Operation: %-54s │%n", entry.getOperationType());
@@ -239,7 +239,7 @@ public class AuditTrailService {
             System.out.printf("│ Execution Time: %-48dms │%n", entry.getExecutionTime());
             System.out.printf("│ Status: %-56s │%n", entry.isSuccess() ? "SUCCESS" : "FAILED");
             System.out.printf("│ Details: %-55s │%n", entry.getDetails());
-            System.out.println("└────────────────────────────────────────────────────────────────────────┘");
+            System.out.println("========================================================================");
             System.out.println();
         }
     }
@@ -368,23 +368,23 @@ public class AuditTrailService {
         // Calculate operations per hour (last hour)
         int operationsPerHour = calculateOperationsPerHour();
         
-        System.out.println("\n╔════════════════════════════════════════════════════════════════════════╗");
-        System.out.println("║                      AUDIT STATISTICS                                    ║");
-        System.out.println("╚════════════════════════════════════════════════════════════════════════╝");
+        System.out.println("\n=========================================================================");
+        System.out.println("                      AUDIT STATISTICS                                    ");
+        System.out.println("==========================================================================");
         System.out.println();
         
-        System.out.println("┌─ OPERATION STATISTICS ────────────────────────────────────────────────┐");
+        System.out.println(" OPERATION STATISTICS ====================================================");
         System.out.printf("│ Total Operations: %-50d │%n", total);
         System.out.printf("│ Successful: %-55d │%n", successful);
         System.out.printf("│ Failed: %-58d │%n", failed);
         System.out.printf("│ Success Rate: %-51.2f%% │%n", total > 0 ? (successful * 100.0 / total) : 0.0);
-        System.out.println("└────────────────────────────────────────────────────────────────────────┘");
+        System.out.println("==========================================================================");
         System.out.println();
         
-        System.out.println("┌─ PERFORMANCE STATISTICS ───────────────────────────────────────────────┐");
+        System.out.println("  PERFORMANCE STATISTICS ===================================================");
         System.out.printf("│ Average Execution Time: %-43.2fms │%n", avgExecutionTime);
         System.out.printf("│ Operations per Hour: %-48d │%n", operationsPerHour);
-        System.out.println("└────────────────────────────────────────────────────────────────────────┘");
+        System.out.println("=============================================================================");
     }
     
     /**

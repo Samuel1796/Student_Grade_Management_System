@@ -166,9 +166,9 @@ public class LRUCache<K, V> {
      * Displays cache contents with access timestamps.
      */
     public void displayCacheContents() {
-        System.out.println("\n╔════════════════════════════════════════════════════════════════════════╗");
-        System.out.println("║                         CACHE CONTENTS                                  ║");
-        System.out.println("╚════════════════════════════════════════════════════════════════════════╝");
+        System.out.println("\n=======================================================================");
+        System.out.println("                         CACHE CONTENTS                                  ");
+        System.out.println("==========================================================================");
         System.out.println();
         
         if (cache.isEmpty()) {
@@ -186,13 +186,13 @@ public class LRUCache<K, V> {
         ));
         
         for (Map.Entry<K, CacheEntry<V>> entry : sortedEntries) {
-            System.out.println("┌─ Entry ─────────────────────────────────────────────────────────────┐");
+            System.out.println(" Entry ==========================================================");
             System.out.printf("│ Key: %-58s │%n", entry.getKey());
             System.out.printf("│ Last Access: %-50s │%n", 
                 sdf.format(new Date(entry.getValue().getLastAccessTime())));
             System.out.printf("│ Created: %-54s │%n", 
                 sdf.format(new Date(entry.getValue().getCreationTime())));
-            System.out.println("└────────────────────────────────────────────────────────────────────────┘");
+            System.out.println("=================================================================");
         }
     }
     
