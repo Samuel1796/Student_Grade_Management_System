@@ -11,17 +11,31 @@ import java.util.*;
 
 import utilities.FileIOUtils;
 import utilities.Logger;
+<<<<<<< HEAD
+=======
+import services.system.AuditTrailService;
+>>>>>>> main
 import java.nio.file.Paths;
 
 public class Main {
     public static void main(String[] args) throws IOException {
+<<<<<<< HEAD
         Logger.initialize();
         Logger.info("APPLICATION: Starting - Student Grade Management System");
         
         
+=======
+        // Initialize Logger first
+        Logger.initialize();
+        Logger.info("=== Student Grade Management System Started ===");
+        Logger.info("Application initialized at: " + new java.util.Date());
+        
+        // Initialize services
+>>>>>>> main
         StudentService studentService = new StudentService();
         GradeService gradeService = new GradeService(500);
         MenuService menuService = new MenuService();
+        AuditTrailService auditTrailService = new AuditTrailService();
 
         // Initialize sample students and grades
         Collection<Student> students = studentService.getStudents();
@@ -47,7 +61,7 @@ public class Main {
         Scanner sc = new Scanner(System.in);
         boolean running = true;
 
-        MainMenuHandler menuHandler = new MainMenuHandler(studentService, gradeService, menuService, statisticsService, sc);
+        MainMenuHandler menuHandler = new MainMenuHandler(studentService, gradeService, menuService, statisticsService, sc, auditTrailService);
         List<Student> studentList = new ArrayList<>(studentService.getStudents());
         int format = 1; // 1: CSV, 2: JSON, 3: Binary, 4: All formats
         String outputDir = "./reports/batch_2025-12-17/";
@@ -57,10 +71,21 @@ public class Main {
         services.file.GradeImportExportService gradeImportExportService = new services.file.GradeImportExportService(gradeService);
         BatchReportTaskManager batchManager = new BatchReportTaskManager(studentList, gradeImportExportService, format, outputDir, threadCount);
 
+<<<<<<< HEAD
         try {
             while (running) {
                 try {
                     menuService.displayMainMenu();
+=======
+        // Add shutdown hook to properly close logger
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            Logger.shutdown();
+            auditTrailService.shutdown();
+        }));
+        
+        while (running) {
+            menuService.displayMainMenu();
+>>>>>>> main
 
                     int choice = sc.nextInt();
                     sc.nextLine();
@@ -87,5 +112,9 @@ public class Main {
                 System.exit(0);
             }
         }
+        
+        // Cleanup on exit
+        Logger.shutdown();
+        auditTrailService.shutdown();
     }
 }

@@ -16,12 +16,9 @@ public class RegularStudent implements Student, Serializable {
     private String phone;
     private String status;
     private int passingGrade;
-    private boolean honorsEligible;
     private double[] grades;
     private int gradeCount;
     private List<Subject> enrolledSubjects;
-    private int subjectCount;
-    private static int studentCounter = 0;
 
     public RegularStudent(String name, int age, String email, String phone) {
         this.name = name;
@@ -29,13 +26,11 @@ public class RegularStudent implements Student, Serializable {
         this.email = email;
         this.phone = phone;
         this.passingGrade = 50;
-        this.honorsEligible = false;
         this.studentID = StudentIdGenerator.nextId();
         this.status = "Active";
         this.grades = new double[10];
         this.gradeCount = 0;
         this.enrolledSubjects = new ArrayList<>();
-        this.subjectCount = 0;
     }
 
     @Override
