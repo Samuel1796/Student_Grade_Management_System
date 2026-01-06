@@ -18,6 +18,13 @@ public class Main {
         Logger.initialize();
         Logger.info("Application starting - Student Grade Management System");
         
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("\nShutting down application...");
+            Logger.info("Application shutting down - exporting logs");
+            Logger.shutdown();
+            System.out.println("Logs exported. Application closed.");
+        }));
+        
         StudentService studentService = new StudentService();
         GradeService gradeService = new GradeService(500);
         MenuService menuService = new MenuService();
@@ -56,12 +63,19 @@ public class Main {
         services.file.GradeImportExportService gradeImportExportService = new services.file.GradeImportExportService(gradeService);
         BatchReportTaskManager batchManager = new BatchReportTaskManager(studentList, gradeImportExportService, format, outputDir, threadCount);
 
-        while (running) {
-            menuService.displayMainMenu();
+        try {
+            while (running) {
+                menuService.displayMainMenu();
 
-            int choice = sc.nextInt();
-            sc.nextLine();
-            running = menuHandler.handleMenu(choice);
+                int choice = sc.nextInt();
+                sc.nextLine();
+                running = menuHandler.handleMenu(choice);
+            }
+        } finally {
+            System.out.println("\nExiting program...");
+            Logger.info("Application exiting - exporting logs");
+            Logger.shutdown();
+            System.out.println("Logs exported successfully.");
         }
     }
 }

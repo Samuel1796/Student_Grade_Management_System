@@ -18,6 +18,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.Scanner;
 
 public class MainMenuHandler {
@@ -968,19 +969,60 @@ System.out.println("ERROR: " + e.getMessage());
 
 //                    AUDIT TRAIL VIEWER
                 case 18:
-                    /**
-                     * Audit Trail Viewer (US-9)
-                     * 
-                     * Views and searches audit logs:
-                     * - Recent entries
-                     * - Filter by operation type
-                     * - Filter by thread ID
-                     * - Search by date range
-                     * - View statistics
-                     */
-                    // Note: AuditTrailService should be initialized in Main and passed here
-                    System.out.println("Audit Trail Viewer - Implementation requires AuditTrailService instance.");
-                    System.out.println("Features: View recent entries, search, filter, statistics");
+                    System.out.println("\n=========================================================================");
+                    System.out.println("                      AUDIT TRAIL VIEWER                                ");
+                    System.out.println("=========================================================================");
+                    System.out.println("1. View All Logs");
+                    System.out.println("2. View Recent Logs (Last 50)");
+                    System.out.println("3. View Error Logs Only");
+                    System.out.println("4. View Warning Logs Only");
+                    System.out.println("5. View Info Logs Only");
+                    System.out.println("6. View Audit Logs Only");
+                    System.out.print("Select option (1-6): ");
+                    
+                    try {
+                        int auditChoice = sc.nextInt();
+                        sc.nextLine();
+                        
+                        List<utilities.Logger.LogEntry> logs = new ArrayList<>();
+                        switch (auditChoice) {
+                            case 1:
+                                logs = utilities.Logger.getAllLogs();
+                                break;
+                            case 2:
+                                logs = utilities.Logger.getRecentLogs(50);
+                                break;
+                            case 3:
+                                logs = utilities.Logger.getLogsByLevel("ERROR");
+                                break;
+                            case 4:
+                                logs = utilities.Logger.getLogsByLevel("WARN");
+                                break;
+                            case 5:
+                                logs = utilities.Logger.getLogsByLevel("INFO");
+                                break;
+                            case 6:
+                                logs = utilities.Logger.getAllLogs();
+                                logs = logs.stream()
+                                    .filter(log -> log.getMessage().contains("AUDIT:"))
+                                    .collect(Collectors.toList());
+                                break;
+                            default:
+                                System.out.println("Invalid option.");
+                                break;
+                        }
+                        
+                        if (auditChoice >= 1 && auditChoice <= 6) {
+                            System.out.println("\nTotal entries: " + logs.size());
+                            System.out.println("=========================================================================");
+                            for (utilities.Logger.LogEntry entry : logs) {
+                                System.out.println(entry.toString());
+                            }
+                            System.out.println("=========================================================================");
+                        }
+                    } catch (Exception e) {
+                        System.out.println("Error viewing audit trail: " + e.getMessage());
+                    }
                     break;
 
                 case 19:
