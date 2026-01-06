@@ -132,7 +132,7 @@ public class TaskScheduler {
             return t;
         });
         
-        Logger.info("TaskScheduler initialized with 3 threads");
+        Logger.info("TASK_SCHEDULER: Initialized with 3 threads");
         loadPersistedTasks();
     }
     
@@ -150,23 +150,20 @@ public class TaskScheduler {
         Runnable taskRunnable = createTaskRunnable(task);
         
         if (scheduleType == ScheduleType.DAILY || scheduleType == ScheduleType.WEEKLY) {
-            // Fixed rate: executes at fixed intervals
             future = scheduler.scheduleAtFixedRate(taskRunnable, initialDelay, period, TimeUnit.SECONDS);
         } else if (scheduleType == ScheduleType.HOURLY) {
-            // Fixed rate for hourly tasks
             future = scheduler.scheduleAtFixedRate(taskRunnable, initialDelay, period, TimeUnit.SECONDS);
         }
         
         task.setFuture(future);
         task.setNextExecution(new Date(System.currentTimeMillis() + (initialDelay * 1000)));
         scheduledTasks.put(taskId, task);
-        // Maintain a priority queue for quick access to the next task by execution time.
         taskQueue.offer(task);
         
         persistTasks();
         
-        Logger.info("Task scheduled: " + taskName + " (ID: " + taskId + ")");
-        Logger.logAudit("SCHEDULE_TASK", "Schedule task: " + taskName, 0, true, 
+        Logger.info("SCHEDULE_TASK: Task scheduled - " + taskName + " (ID: " + taskId + ")");
+        Logger.logAudit("SCHEDULE_TASK", "Schedule task " + taskName, 0, true, 
             "Task ID: " + taskId + ", Type: " + taskType + ", Schedule: " + scheduleType);
         System.out.println("Task scheduled: " + taskName + " (ID: " + taskId + ")");
     }
@@ -188,7 +185,7 @@ public class TaskScheduler {
                             student.calculateAverage(gradeService);
                         }
                         success = true;
-                        Logger.debug("GPA recalculation completed for " + students.size() + " students");
+                        Logger.debug("SCHEDULED_TASK: GPA recalculation completed for " + students.size() + " students");
                         break;
                         
                     case STATISTICS_CACHE_REFRESH:
@@ -196,7 +193,7 @@ public class TaskScheduler {
                         statisticsService.calculateMean();
                         statisticsService.calculateMedian();
                         success = true;
-                        Logger.debug("Statistics cache refreshed");
+                        Logger.debug("SCHEDULED_TASK: Statistics cache refreshed");
                         break;
                         
                     case BATCH_REPORT_GENERATION:
@@ -230,7 +227,7 @@ public class TaskScheduler {
                 metrics.put("taskType", task.getTaskType().toString());
                 metrics.put("scheduleType", task.getScheduleType().toString());
                 Logger.logPerformance("SCHEDULED_TASK_EXECUTION", duration, metrics);
-                Logger.logAudit("SCHEDULED_TASK", "Execute task: " + task.getTaskName(), duration, success, details);
+                Logger.logAudit("SCHEDULED_TASK", "Execute " + task.getTaskName(), duration, success, details);
                 
                 logExecution(execution);
                 
@@ -251,8 +248,8 @@ public class TaskScheduler {
                     task.getTaskId(), task.getTaskName(), duration, false, "Error: " + e.getMessage()
                 );
                 executionHistory.add(execution);
-                Logger.error("Scheduled task execution failed: " + task.getTaskName(), e);
-                Logger.logAudit("SCHEDULED_TASK", "Execute task: " + task.getTaskName(), duration, false, 
+                Logger.error("SCHEDULED_TASK: Execution failed - " + task.getTaskName() + " - " + e.getMessage(), e);
+                Logger.logAudit("SCHEDULED_TASK", "Execute " + task.getTaskName(), duration, false, 
                     "Error: " + e.getMessage());
                 logExecution(execution);
             }

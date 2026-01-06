@@ -57,13 +57,13 @@ public class BatchReportTaskManager {
         this.threadCount = threadCount;
         this.executor = Executors.newFixedThreadPool(threadCount);
         new java.io.File(outputDir).mkdirs();
-        Logger.info("BatchReportTaskManager initialized with " + totalTasks + " tasks, " + threadCount + " threads");
+        Logger.info("BATCH_REPORT_MANAGER: Initialized with " + totalTasks + " tasks, " + threadCount + " threads");
     }
 
     /** Starts the concurrent batch export for all students and waits until all reports finish. */
     public void startBatchExport() {
         long startTime = System.currentTimeMillis();
-        Logger.info("Starting batch export for " + totalTasks + " students");
+        Logger.info("BATCH_EXPORT: Starting batch export for " + totalTasks + " students");
         List<Future<?>> futures = new ArrayList<>();
         
         for (Student student : students) {
@@ -140,9 +140,9 @@ public class BatchReportTaskManager {
                     threadStatus.put(student.getStudentID(), "failed (" + threadName + ")");
                     failedTasks.incrementAndGet();
                     long duration = System.currentTimeMillis() - t0;
-                    Logger.error("Export failed for " + student.getStudentID() + ": " + e.getMessage(), e);
-                    Logger.logAudit("BATCH_EXPORT", "Export student report: " + student.getStudentID(), duration, false, 
-                        "Exception: " + e.getMessage());
+                    Logger.error("BATCH_EXPORT: Export failed for " + student.getStudentID() + " - " + e.getMessage(), e);
+                    Logger.logAudit("BATCH_EXPORT", "Export report for " + student.getStudentID(), duration, false, 
+                        "Error: " + e.getMessage());
                 }
                 
                 long t1 = System.currentTimeMillis();
@@ -154,7 +154,7 @@ public class BatchReportTaskManager {
                     metrics.put("collectionSize", totalTasks);
                     metrics.put("collectionName", "students");
                     Logger.logPerformanceWithCollections("BATCH_EXPORT_STUDENT", duration, totalTasks, "students", executor);
-                    Logger.logAudit("BATCH_EXPORT", "Export student report: " + student.getStudentID(), duration, true, 
+                    Logger.logAudit("BATCH_EXPORT", "Export report for " + student.getStudentID(), duration, true, 
                         "Report generated successfully");
                 }
             }));
@@ -184,7 +184,7 @@ public class BatchReportTaskManager {
         metrics.put("threadCount", threadCount);
         Logger.logPerformance("BATCH_EXPORT_ALL", totalDuration, metrics);
         Logger.logAudit("BATCH_EXPORT_ALL", "Batch export completed", totalDuration, true, 
-            "Total: " + totalTasks + ", Completed: " + completedTasks.get() + ", Failed: " + failedTasks.get());
+            "Total tasks: " + totalTasks + ", Completed: " + completedTasks.get() + ", Failed: " + failedTasks.get());
         showSummary(startTime);
         shutdown();
     }

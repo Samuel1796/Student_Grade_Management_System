@@ -16,14 +16,8 @@ import java.nio.file.Paths;
 public class Main {
     public static void main(String[] args) throws IOException {
         Logger.initialize();
-        Logger.info("Application starting - Student Grade Management System");
+        Logger.info("APPLICATION: Starting - Student Grade Management System");
         
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.println("\nShutting down application...");
-            Logger.info("Application shutting down - exporting logs");
-            Logger.shutdown();
-            System.out.println("Logs exported. Application closed.");
-        }));
         
         StudentService studentService = new StudentService();
         GradeService gradeService = new GradeService(500);
@@ -65,17 +59,33 @@ public class Main {
 
         try {
             while (running) {
-                menuService.displayMainMenu();
+                try {
+                    menuService.displayMainMenu();
 
-                int choice = sc.nextInt();
-                sc.nextLine();
-                running = menuHandler.handleMenu(choice);
+                    int choice = sc.nextInt();
+                    sc.nextLine();
+                    running = menuHandler.handleMenu(choice);
+                } catch (java.util.InputMismatchException e) {
+                    Logger.warn("APPLICATION: Invalid input format - " + e.getMessage());
+                    System.out.println("Invalid input. Please enter a number.");
+                    sc.nextLine();
+                } catch (Exception e) {
+                    Logger.error("APPLICATION: Error in menu handler - " + e.getMessage(), e);
+                    System.out.println("An error occurred: " + e.getMessage());
+                    System.out.println("Please try again.");
+                }
             }
+        } catch (Exception e) {
+            Logger.error("APPLICATION: Fatal error in main loop - " + e.getMessage(), e);
+            System.out.println("A fatal error occurred: " + e.getMessage());
         } finally {
-            System.out.println("\nExiting program...");
-            Logger.info("Application exiting - exporting logs");
-            Logger.shutdown();
-            System.out.println("Logs exported successfully.");
+            if (!running) {
+                System.out.println("\nExiting program...");
+                Logger.info("APPLICATION: Exiting - exporting logs");
+                Logger.shutdown();
+                System.out.println("Logs exported successfully.");
+                System.exit(0);
+            }
         }
     }
 }

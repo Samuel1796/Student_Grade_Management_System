@@ -12,6 +12,7 @@ import services.file.BatchReportTaskManager;
 import services.analytics.StatisticsService;
 import services.analytics.StatisticsDashboard;
 import services.search.PatternSearchService;
+import utilities.Logger;
 
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -42,11 +43,10 @@ public class MainMenuHandler {
         this.statisticsService = statisticsService;
         this.sc = sc;
     }
+    
 
     public boolean handleMenu(int choice) {
         try {
-
-
             switch (choice) {
 
 
@@ -55,45 +55,59 @@ public class MainMenuHandler {
                     boolean studentAdded = false;
                     while (!studentAdded) {
                         try {
-                            System.out.print("Enter student name: ");
-                            String name = sc.nextLine();
+                            String name = ValidationUtils.readStringInput(sc, "Enter student name: ", false);
+                            if (name == null) break;
+                            
                             String nameError = ValidationUtils.validateName(name);
                             if (nameError != null) {
                                 System.out.println(nameError);
+                                System.out.print("Try again? (Y/N): ");
+                                String retry = sc.nextLine().trim();
+                                if (!retry.equalsIgnoreCase("Y")) {
+                                    break;
+                                }
                                 continue;
                             }
 
-                            int age = -1;
-                            while (age < 0) {
-                                System.out.print("Enter student age: ");
-                                String ageInput = sc.nextLine();
-                                try {
-                                    age = Integer.parseInt(ageInput);
-                                    if (age < 0) {
-                                        System.out.println("Age must be a positive integer.");
-                                    }
-                                } catch (NumberFormatException e) {
-                                    System.out.println("Invalid input. Please enter a valid integer for age.");
-                                }
-                            }
+                            int age = ValidationUtils.readIntInput(sc, "Enter student age: ", 1, 150);
 
                             String email;
                             while (true) {
-                                System.out.print("Enter student email: ");
-                                email = sc.nextLine();
+                                email = ValidationUtils.readStringInput(sc, "Enter student email: ", false);
+                                if (email == null) {
+                                    studentAdded = false;
+                                    break;
+                                }
                                 String emailError = ValidationUtils.validateEmail(email);
                                 if (emailError == null) break;
                                 System.out.println(emailError);
+                                System.out.print("Try again? (Y/N): ");
+                                String retry = sc.nextLine().trim();
+                                if (!retry.equalsIgnoreCase("Y")) {
+                                    studentAdded = false;
+                                    break;
+                                }
                             }
+                            if (email == null) break;
 
                             String phone;
                             while (true) {
-                                System.out.print("Enter student phone: ");
-                                phone = sc.nextLine();
+                                phone = ValidationUtils.readStringInput(sc, "Enter student phone: ", false);
+                                if (phone == null) {
+                                    studentAdded = false;
+                                    break;
+                                }
                                 String phoneError = ValidationUtils.validatePhone(phone);
                                 if (phoneError == null) break;
                                 System.out.println(phoneError);
+                                System.out.print("Try again? (Y/N): ");
+                                String retry = sc.nextLine().trim();
+                                if (!retry.equalsIgnoreCase("Y")) {
+                                    studentAdded = false;
+                                    break;
+                                }
                             }
+                            if (phone == null) break;
 
                             if (studentService.isDuplicateStudent(name, email)) {
                                 throw new DuplicateStudentException(name, email);
@@ -102,19 +116,7 @@ public class MainMenuHandler {
                             System.out.println("Student type: ");
                             System.out.println("1. Regular Student (Passing grade: 50%)");
                             System.out.println("2. Honors Student (Passing grade: 60%, honors recognition)");
-                            System.out.print("Select type (1-2): ");
-                            int type = -1;
-                            while (type != 1 && type != 2) {
-                                String typeInput = sc.nextLine();
-                                try {
-                                    type = Integer.parseInt(typeInput);
-                                    if (type != 1 && type != 2) {
-                                        System.out.println("Invalid selection. Please enter 1 or 2.");
-                                    }
-                                } catch (NumberFormatException e) {
-                                    System.out.println("Invalid input. Please enter 1 or 2.");
-                                }
-                            }
+                            int type = ValidationUtils.readIntInput(sc, "Select type (1-2): ", 1, 2);
 
                             Student newStudent = (type == 2)
                                     ? new HonorsStudent(name, age, email, phone)
@@ -123,8 +125,21 @@ public class MainMenuHandler {
                             System.out.println("Student added successfully!");
                             studentAdded = true;
                         } catch (DuplicateStudentException e) {
-                            System.out.print("Duplicate student detected. Try again? (Y/N): ");
-                            String retry = sc.nextLine();
+                            Logger.warn("ADD_STUDENT: Duplicate student detected - " + e.getMessage());
+                            System.out.println("Duplicate student detected: " + e.getMessage());
+                            System.out.print("Try again? (Y/N): ");
+                            String retry = sc.nextLine().trim();
+                            if (!retry.equalsIgnoreCase("Y")) {
+                                break;
+                            }
+                        } catch (java.util.InputMismatchException e) {
+                            System.out.println("Input cancelled by user.");
+                            break;
+                        } catch (Exception e) {
+                            Logger.error("ADD_STUDENT: Error adding student - " + e.getMessage(), e);
+                            System.out.println("An error occurred: " + e.getMessage());
+                            System.out.print("Try again? (Y/N): ");
+                            String retry = sc.nextLine().trim();
                             if (!retry.equalsIgnoreCase("Y")) {
                                 break;
                             }
@@ -492,7 +507,8 @@ System.out.println("ERROR: " + e.getMessage());
 
 
                 case 8:
-                    // Calculate Student GPA
+                    long gpaStartTime = System.currentTimeMillis();
+                    Logger.info("CALCULATE_STUDENT_GPA: Starting");
                     System.out.println("CALCULATE STUDENT GPA");
                     System.out.println("_____________________________");
                     Student gpaStudent = null;
@@ -504,6 +520,7 @@ System.out.println("ERROR: " + e.getMessage());
                             gpaStudent = studentService.findStudentById(gpaId);
                             foundGPA = true;
                         } catch (StudentNotFoundException e) {
+                            Logger.warn("CALCULATE_STUDENT_GPA: Student not found - " + gpaId);
                             System.out.println("Error: " + e.getMessage());
                             System.out.print("Try again? (Y/N): ");
                             String retry = sc.nextLine();
@@ -512,13 +529,20 @@ System.out.println("ERROR: " + e.getMessage());
                             }
                         }
                     }
-                    if (!foundGPA || gpaStudent == null) break;
+                    if (!foundGPA || gpaStudent == null) {
+                        long gpaDuration = System.currentTimeMillis() - gpaStartTime;
+                        Logger.logAudit("CALCULATE_STUDENT_GPA", "Calculate GPA", gpaDuration, false, "Student not found or operation cancelled");
+                        break;
+                    }
                     statisticsService.printStudentGPAReport(gpaStudent);
+                    long gpaDuration = System.currentTimeMillis() - gpaStartTime;
+                    Logger.logAudit("CALCULATE_STUDENT_GPA", "Calculate GPA for " + gpaStudent.getStudentID(), gpaDuration, true, "GPA calculated successfully");
                     break;
 
 //                    VIEW CLASS STATS
                 case 9:
-                    // STATISTICAL ANALYSIS
+                    long statsStartTime = System.currentTimeMillis();
+                    Logger.info("VIEW_CLASS_STATISTICS: Starting");
                     StatisticsService statsService = new StatisticsService(
                             gradeService.getGrades(),
                             gradeService.getGradeCount(),
@@ -527,28 +551,28 @@ System.out.println("ERROR: " + e.getMessage());
                             gradeService
                     );
                     statsService.printStatisticsReport();
+                    long statsDuration = System.currentTimeMillis() - statsStartTime;
+                    Map<String, Object> statsMetrics = new java.util.HashMap<>();
+                    statsMetrics.put("studentCount", studentService.getStudentCount());
+                    statsMetrics.put("gradeCount", gradeService.getGradeCount());
+                    Logger.logPerformance("VIEW_CLASS_STATISTICS", statsDuration, statsMetrics);
+                    Logger.logAudit("VIEW_CLASS_STATISTICS", "View class statistics", statsDuration, true, "Statistics report generated");
                     break;
 
 
 //                    REAL TIME STATS
                 case 10:
-                    /**
-                     * Real-Time Statistics Dashboard Handler
-                     * Features:
-                     * - Auto-refreshing dashboard every 5 seconds (background daemon thread)
-                     * - Live grade distribution, averages, and top performers
-                     */
-                    // Create StatisticsDashboard using current GradeService data and student collection
+                    long dashboardStartTime = System.currentTimeMillis();
+                    Logger.info("REAL_TIME_STATISTICS_DASHBOARD: Starting");
                     StatisticsDashboard dashboard = new StatisticsDashboard(
                         gradeService,
                         studentService.getStudents(),
                         studentService.getStudentCount()
                     );
                     
-                    // Set dashboard in menu service for status display
                     menuService.setStatisticsDashboard(dashboard);
-                    
                     dashboard.start();
+                    Logger.info("REAL_TIME_STATISTICS_DASHBOARD: Dashboard started");
                     
                     // Interactive dashboard loop
                     Scanner dashboardScanner = new Scanner(System.in);
@@ -590,6 +614,8 @@ System.out.println("ERROR: " + e.getMessage());
                     if (dashboard.isRunning()) {
                         dashboard.stop();
                     }
+                    long dashboardDuration = System.currentTimeMillis() - dashboardStartTime;
+                    Logger.logAudit("REAL_TIME_STATISTICS_DASHBOARD", "Real-Time Dashboard session", dashboardDuration, true, "Dashboard closed");
                     break;
 
 //                    GENERATE BATCH REPORT
@@ -694,18 +720,27 @@ System.out.println("ERROR: " + e.getMessage());
                     String batchDir = "./reports/batch_" + new java.text.SimpleDateFormat("yyyy-MM-dd").format(new java.util.Date()) + "/";
                     new java.io.File(batchDir).mkdirs();
 
-                    // Phase 5: Execute Batch Generation
-                    // Create task manager with configuration and start concurrent execution
-                    // BatchReportTaskManager handles thread pool, progress tracking, and error handling
+                    long batchStartTime = System.currentTimeMillis();
+                    Logger.info("GENERATE_BATCH_REPORTS: Starting - Scope: " + scope + ", Format: " + format + ", Threads: " + threads);
                     BatchReportTaskManager manager = new BatchReportTaskManager(
                             batchStudents, gradeImportExportService, format, batchDir, threads
                     );
-                    manager.startBatchExport(); // Blocks until all reports are generated
+                    manager.startBatchExport();
+                    long batchDuration = System.currentTimeMillis() - batchStartTime;
+                    Map<String, Object> batchMetrics = new java.util.HashMap<>();
+                    batchMetrics.put("studentCount", batchStudents.size());
+                    batchMetrics.put("format", format);
+                    batchMetrics.put("threads", threads);
+                    Logger.logPerformance("GENERATE_BATCH_REPORTS", batchDuration, batchMetrics);
+                    Logger.logAudit("GENERATE_BATCH_REPORTS", "Generate batch reports", batchDuration, true, 
+                        "Reports generated for " + batchStudents.size() + " students");
                     break;
 
 
 //
                 case 12:
+                    long searchStartTime = System.currentTimeMillis();
+                    Logger.info("SEARCH_STUDENTS: Starting");
                     System.out.println("SEARCH STUDENTS");
                     System.out.println("_____________________________");
                     System.out.println("Search options:");
@@ -763,6 +798,7 @@ System.out.println("ERROR: " + e.getMessage());
                             break;
                     }
 
+                    long searchDuration = System.currentTimeMillis() - searchStartTime;
                     if (searchResults != null && searchResults.length > 0) {
                         System.out.println("Search Results:");
                         for (Student s : searchResults) {
@@ -774,21 +810,21 @@ System.out.println("ERROR: " + e.getMessage());
                                     s.getPhone(),
                                     s.calculateAverage(gradeService));
                         }
+                        Map<String, Object> searchMetrics = new java.util.HashMap<>();
+                        searchMetrics.put("resultCount", searchResults.length);
+                        searchMetrics.put("searchOption", searchOption);
+                        Logger.logPerformance("SEARCH_STUDENTS", searchDuration, searchMetrics);
+                        Logger.logAudit("SEARCH_STUDENTS", "Search students (Option: " + searchOption + ")", searchDuration, true, 
+                            "Found " + searchResults.length + " results");
+                    } else {
+                        Logger.logAudit("SEARCH_STUDENTS", "Search students (Option: " + searchOption + ")", searchDuration, true, "No results found");
                     }
                     break;
 
 //                    PATTERN BASED SEARCH
                 case 13:
-                    /**
-                     * Advanced Pattern-Based Search (US-7)
-                     * 
-                     * Allows searching students using regex patterns:
-                     * - Email domain patterns
-                     * - Phone area code patterns
-                     * - Student ID patterns with wildcards
-                     * - Name patterns
-                     * - Custom regex patterns
-                     */
+                    long patternStartTime = System.currentTimeMillis();
+                    Logger.info("PATTERN_BASED_SEARCH: Starting");
                     PatternSearchService patternSearch = new PatternSearchService(studentService.getStudents());
                     
                     System.out.println("PATTERN-BASED SEARCH");
@@ -833,6 +869,7 @@ System.out.println("ERROR: " + e.getMessage());
                             break;
                     }
                     
+                    long patternDuration = System.currentTimeMillis() - patternStartTime;
                     if (patternSearchResults != null && !patternSearchResults.containsKey("error")) {
                         @SuppressWarnings("unchecked")
                         List<PatternSearchService.SearchResult> results = 
@@ -861,8 +898,20 @@ System.out.println("ERROR: " + e.getMessage());
                             System.out.println("\nDistribution:");
                             distribution.forEach((k, v) -> System.out.println("  " + k + ": " + v));
                         }
+                        
+                        Map<String, Object> patternMetrics = new java.util.HashMap<>();
+                        patternMetrics.put("patternOption", patternOption);
+                        patternMetrics.put("caseSensitive", caseSensitive);
+                        patternMetrics.put("resultCount", results.size());
+                        Logger.logPerformance("PATTERN_BASED_SEARCH", patternDuration, patternMetrics);
+                        Logger.logAudit("PATTERN_BASED_SEARCH", "Pattern search (Option: " + patternOption + ")", patternDuration, true, 
+                            "Found " + results.size() + " matches");
                     } else if (patternSearchResults != null && patternSearchResults.containsKey("error")) {
+                        Logger.logAudit("PATTERN_BASED_SEARCH", "Pattern search (Option: " + patternOption + ")", patternDuration, false, 
+                            "Error: " + patternSearchResults.get("error"));
                         System.out.println("Error: " + patternSearchResults.get("error"));
+                    } else {
+                        Logger.logAudit("PATTERN_BASED_SEARCH", "Pattern search (Option: " + patternOption + ")", patternDuration, true, "No results found");
                     }
                     break;
 
@@ -1035,10 +1084,25 @@ System.out.println("ERROR: " + e.getMessage());
 
 
             }
+        } catch (java.util.InputMismatchException e) {
+            Logger.warn("MENU_HANDLER: Input mismatch - " + e.getMessage());
+            System.out.println("Invalid input detected. Please try again.");
+            return true;
+        } catch (NumberFormatException e) {
+            Logger.warn("MENU_HANDLER: Number format error - " + e.getMessage());
+            System.out.println("Invalid number format. Please enter a valid number and try again.");
+            return true;
+        } catch (IllegalArgumentException e) {
+            Logger.warn("MENU_HANDLER: Illegal argument - " + e.getMessage());
+            System.out.println("Invalid argument: " + e.getMessage());
+            System.out.println("Please check your input and try again.");
+            return true;
         } catch (Exception e) {
-            System.out.println("An error occurred: " + e.getMessage());
+            Logger.error("MENU_HANDLER: Unexpected error - " + e.getMessage(), e);
+            System.out.println("An unexpected error occurred: " + e.getMessage());
+            System.out.println("The application will continue. Please try again or contact support if the problem persists.");
+            return true;
         }
-
 
         return true;
     }

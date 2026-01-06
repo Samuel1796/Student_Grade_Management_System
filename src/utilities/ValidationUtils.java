@@ -1,7 +1,7 @@
 package utilities;
 
+import java.util.Scanner;
 import java.util.regex.Pattern;
-import java.util.regex.Matcher;
 
 /**
  * Utility class for comprehensive input validation using regex patterns.
@@ -237,6 +237,126 @@ public class ValidationUtils {
             return getValidationErrorMessage("Name", name, "name");
         }
         return null;
+    }
+    
+    /**
+     * Prompts user to retry after an error.
+     * 
+     * @param scanner The scanner to read user input
+     * @return true if user wants to retry, false otherwise
+     */
+    private static boolean promptRetry(Scanner scanner) {
+        System.out.print("Try again? (Y/N): ");
+        String retry = scanner.nextLine().trim();
+        return retry.equalsIgnoreCase("Y");
+    }
+    
+    /**
+     * Safely reads an integer input with validation and retry logic.
+     * 
+     * @param scanner The scanner to read input from
+     * @param prompt The prompt message to display
+     * @param min Minimum allowed value (inclusive)
+     * @param max Maximum allowed value (inclusive)
+     * @return The validated integer value
+     * @throws java.util.InputMismatchException if user cancels input
+     */
+    public static int readIntInput(Scanner scanner, String prompt, int min, int max) {
+        while (true) {
+            try {
+                System.out.print(prompt);
+                String input = scanner.nextLine().trim();
+                if (input.isEmpty()) {
+                    System.out.println("Input cannot be empty. Please try again.");
+                    continue;
+                }
+                int value = Integer.parseInt(input);
+                if (value < min || value > max) {
+                    System.out.println("Invalid input. Please enter a number between " + min + " and " + max + ".");
+                    continue;
+                }
+                return value;
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a valid integer.");
+                if (!promptRetry(scanner)) {
+                    throw new java.util.InputMismatchException("User cancelled input");
+                }
+            } catch (Exception e) {
+                Logger.error("VALIDATION_UTILS: Error reading integer input - " + e.getMessage(), e);
+                System.out.println("An error occurred: " + e.getMessage());
+                if (!promptRetry(scanner)) {
+                    throw new java.util.InputMismatchException("User cancelled input");
+                }
+            }
+        }
+    }
+    
+    /**
+     * Safely reads a double input with validation and retry logic.
+     * 
+     * @param scanner The scanner to read input from
+     * @param prompt The prompt message to display
+     * @param min Minimum allowed value (inclusive)
+     * @param max Maximum allowed value (inclusive)
+     * @return The validated double value
+     * @throws java.util.InputMismatchException if user cancels input
+     */
+    public static double readDoubleInput(Scanner scanner, String prompt, double min, double max) {
+        while (true) {
+            try {
+                System.out.print(prompt);
+                String input = scanner.nextLine().trim();
+                if (input.isEmpty()) {
+                    System.out.println("Input cannot be empty. Please try again.");
+                    continue;
+                }
+                double value = Double.parseDouble(input);
+                if (value < min || value > max) {
+                    System.out.println("Invalid input. Please enter a number between " + min + " and " + max + ".");
+                    continue;
+                }
+                return value;
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a valid number.");
+                if (!promptRetry(scanner)) {
+                    throw new java.util.InputMismatchException("User cancelled input");
+                }
+            } catch (Exception e) {
+                Logger.error("VALIDATION_UTILS: Error reading double input - " + e.getMessage(), e);
+                System.out.println("An error occurred: " + e.getMessage());
+                if (!promptRetry(scanner)) {
+                    throw new java.util.InputMismatchException("User cancelled input");
+                }
+            }
+        }
+    }
+    
+    /**
+     * Safely reads a string input with validation.
+     * 
+     * @param scanner The scanner to read input from
+     * @param prompt The prompt message to display
+     * @param allowEmpty Whether empty input is allowed
+     * @return The validated string, or null if user cancels
+     */
+    public static String readStringInput(Scanner scanner, String prompt, boolean allowEmpty) {
+        while (true) {
+            try {
+                System.out.print(prompt);
+                String input = scanner.nextLine().trim();
+                if (!allowEmpty && input.isEmpty()) {
+                    System.out.println("Input cannot be empty. Please try again.");
+                    continue;
+                }
+                return input;
+            } catch (Exception e) {
+                Logger.error("VALIDATION_UTILS: Error reading string input - " + e.getMessage(), e);
+                System.out.println("An error occurred: " + e.getMessage());
+                if (!promptRetry(scanner)) {
+                    return null;
+                }
+            }
+        }
     }
 }
 
