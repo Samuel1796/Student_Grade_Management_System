@@ -610,20 +610,14 @@ System.out.println("ERROR: " + e.getMessage());
                         try { scope = Integer.parseInt(sc.nextLine()); } catch (NumberFormatException ignored) {}
                     }
 
-                    // Phase 1: Student Selection - Filter students based on scope
-                    // Different strategies for different scopes (Strategy pattern)
                     List<Student> batchStudents = new ArrayList<>();
                     
                     if (scope == 1) {
-                        // Strategy 1: All students - no filtering needed
                         batchStudents.addAll(studentService.getStudents());
                     } else if (scope == 2) {
-                        // Strategy 2: Filter by student type (Regular vs Honors)
                         System.out.print("Type (1: Regular, 2: Honors): ");
                         int type = Integer.parseInt(sc.nextLine());
                         
-                        // Iterate through all students and filter by instance type
-                        // Uses instanceof for reliable type checking
                         for (Student s : studentService.getStudents()) {
                             if ((type == 1 && s instanceof RegularStudent) ||
                                     (type == 2 && s instanceof HonorsStudent)) {

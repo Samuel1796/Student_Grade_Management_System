@@ -10,14 +10,14 @@ import java.io.IOException;
 import java.util.*;
 
 import utilities.FileIOUtils;
+import utilities.Logger;
 import java.nio.file.Paths;
 
-
-
-// Main application class for Student Grade Management System.
 public class Main {
     public static void main(String[] args) throws IOException {
-        // Initialize services
+        Logger.initialize();
+        Logger.info("Application starting - Student Grade Management System");
+        
         StudentService studentService = new StudentService();
         GradeService gradeService = new GradeService(500);
         MenuService menuService = new MenuService();
