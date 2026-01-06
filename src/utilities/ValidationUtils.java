@@ -32,17 +32,6 @@ public class ValidationUtils {
         "^(0\\d{9}|\\+233\\d{9})$"
     );
     
-    /** Name Pattern: Letters, spaces, hyphens, apostrophes (e.g., John O'Brien, Mary-Jane) */
-    private static final Pattern NAME_PATTERN = Pattern.compile("^[a-zA-Z]+(['-\\s][a-zA-Z]+)*$");
-    
-    /** Date Pattern: YYYY-MM-DD format (e.g., 2025-12-17) */
-    private static final Pattern DATE_PATTERN = Pattern.compile("^\\d{4}-\\d{2}-\\d{2}$");
-    
-    /** Course Code Pattern: 3 uppercase letters followed by 3 digits (e.g., MAT101, ENG203) */
-    private static final Pattern COURSE_CODE_PATTERN = Pattern.compile("^[A-Z]{3}\\d{3}$");
-    
-    /** Grade Pattern: 0-100 inclusive (supports 0, 1-9, 10-99, 100) */
-    private static final Pattern GRADE_PATTERN = Pattern.compile("^(100|[1-9]?\\d)$");
     
     /**
      * Validates a student ID against the pattern STU###.
@@ -77,51 +66,15 @@ public class ValidationUtils {
     }
     
     /**
-     * Validates a name (allows letters, spaces, hyphens, apostrophes).
-     * 
-     * @param name The name to validate
-     * @return true if valid, false otherwise
-     */
-    public static boolean isValidName(String name) {
-        if (name == null || name.trim().isEmpty()) return false;
-        return NAME_PATTERN.matcher(name.trim()).matches();
-    }
-    
-    /**
-     * Validates a date in YYYY-MM-DD format.
-     * 
-     * @param date The date string to validate
-     * @return true if valid format, false otherwise
-     */
-    public static boolean isValidDate(String date) {
-        if (date == null) return false;
-        return DATE_PATTERN.matcher(date.trim()).matches();
-    }
-    
-    /**
-     * Validates a course code (3 uppercase letters + 3 digits).
-     * 
-     * @param courseCode The course code to validate
-     * @return true if valid, false otherwise
-     */
-    public static boolean isValidCourseCode(String courseCode) {
-        if (courseCode == null) return false;
-        return COURSE_CODE_PATTERN.matcher(courseCode.trim()).matches();
-    }
-    
-    /**
-     * Validates a grade value (0-100).
+     * Validates a grade value (0-100) using range check.
      * 
      * @param grade The grade value as string
      * @return true if valid, false otherwise
      */
     public static boolean isValidGrade(String grade) {
         if (grade == null) return false;
-        if (!GRADE_PATTERN.matcher(grade.trim()).matches()) return false;
-        
-        // Additional range check after pattern match
         try {
-            int gradeValue = Integer.parseInt(grade.trim());
+            double gradeValue = Double.parseDouble(grade.trim());
             return gradeValue >= 0 && gradeValue <= 100;
         } catch (NumberFormatException e) {
             return false;
@@ -163,18 +116,6 @@ public class ValidationUtils {
             case "phone":
                 error.append("Ghana phone format: 0XXXXXXXXX or +233XXXXXXXXX (9 digits after country code)\n");
                 error.append("Examples: 0241234567, 0509876543, +233241234567, +233509876543");
-                break;
-            case "name":
-                error.append("letters, spaces, hyphens, and apostrophes only\n");
-                error.append("Examples: John Smith, Mary-Jane Watson, O'Brien");
-                break;
-            case "date":
-                error.append("YYYY-MM-DD format\n");
-                error.append("Examples: 2025-12-17, 2024-01-01");
-                break;
-            case "coursecode":
-                error.append("3 uppercase letters followed by 3 digits\n");
-                error.append("Examples: MAT101, ENG203, CS450");
                 break;
             case "grade":
                 error.append("number between 0 and 100\n");
@@ -222,19 +163,6 @@ public class ValidationUtils {
     public static String validatePhone(String phone) {
         if (!isValidPhone(phone)) {
             return getValidationErrorMessage("Phone", phone, "phone");
-        }
-        return null;
-    }
-    
-    /**
-     * Validates name and returns error message if invalid.
-     * 
-     * @param name The name to validate
-     * @return Error message if invalid, null if valid
-     */
-    public static String validateName(String name) {
-        if (!isValidName(name)) {
-            return getValidationErrorMessage("Name", name, "name");
         }
         return null;
     }

@@ -58,9 +58,8 @@ public class MainMenuHandler {
                             String name = ValidationUtils.readStringInput(sc, "Enter student name: ", false);
                             if (name == null) break;
                             
-                            String nameError = ValidationUtils.validateName(name);
-                            if (nameError != null) {
-                                System.out.println(nameError);
+                            if (name.trim().isEmpty()) {
+                                System.out.println("Name cannot be empty. Please try again.");
                                 System.out.print("Try again? (Y/N): ");
                                 String retry = sc.nextLine().trim();
                                 if (!retry.equalsIgnoreCase("Y")) {
